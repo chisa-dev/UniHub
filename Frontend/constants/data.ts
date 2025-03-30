@@ -458,31 +458,20 @@ export const aiGeneratorBrainstorm = [
 export const upgradeModalData = [
   {
     id: uuidv4(),
-    title: "2.1v Flash",
-    desc: "Get everyday help",
+    title: "GPT-4o",
+    desc: "The latest and most powerful model",
     isNew: true,
   },
   {
     id: uuidv4(),
-    title: "2.0v Flash Thinking Experimental",
-    desc: "Best for multi-step reasoning",
+    title: "Gemini Pro",
+    desc: "The latest and most powerful model",
     isNew: true,
   },
+  
   {
     id: uuidv4(),
-    title: "1.9.1 Thinking Experimental with apps",
-    desc: "Reasoning across YouTube, Maps & Search",
-    isNew: true,
-  },
-  {
-    id: uuidv4(),
-    title: "1.9 Flash",
-    desc: "Previous Model",
-    isNew: false,
-  },
-  {
-    id: uuidv4(),
-    title: "1.5 Flash",
+    title: "Claude 3.5 Sonnet",
     desc: "Start Journey With AI",
     isNew: false,
   },

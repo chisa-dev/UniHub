@@ -21,7 +21,7 @@ function UpgradeModal() {
 
           <PiCaretDown />
         </div>
-        <p className="text-xs text-n300">2.1v Flash</p>
+        <p className="text-xs text-n300">GPT-4o</p>
       </div>
 
       <div

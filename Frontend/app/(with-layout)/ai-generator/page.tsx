@@ -14,11 +14,10 @@ function AiGenerator() {
         <div className="flex flex-col justify-center items-center px-6 mb-10">
           <div className="text-center">
             <p className="text-2xl font-semibold text-n700 dark:text-n30 ">
-              Harness the Power of AI
+              Power of AI in your Study
             </p>
             <p className="pt-2">
-              Discover the core of our AI chat app that&apos;s transforming the
-              way we communicate
+              Discover the power of AI in your study with our AI Generator.
             </p>
           </div>
           <div className="pt-10 flex justify-start items-start w-full max-w-[1080px] flex-col ">
