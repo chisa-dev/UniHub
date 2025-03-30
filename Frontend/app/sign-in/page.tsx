@@ -2,11 +2,9 @@
 import React, { FormEvent, useState } from "react";
 import displayImg from "@/public/images/sign-in-page-img.png";
 import Image from "next/image";
-import fav from "@/public/images/favicon.png";
 import FormInput from "@/components/ui/FormInput";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Footer from "@/components/Footer";
-import { PiFacebookLogo, PiGoogleLogo, PiInstagramLogo } from "react-icons/pi";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

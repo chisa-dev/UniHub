@@ -1,11 +1,9 @@
 import React from "react";
 import displayImg from "@/public/images/sign-up-page-img.png";
 import Image from "next/image";
-import fav from "@/public/images/favicon.png";
 import FormInput from "@/components/ui/FormInput";
 import GradientBackground from "@/components/ui/GradientBackground";
 import Footer from "@/components/Footer";
-import { PiFacebookLogo, PiGoogleLogo, PiInstagramLogo } from "react-icons/pi";
 import Link from "next/link";
 
 function SignUp() {
@@ -18,7 +16,7 @@ function SignUp() {
 
 
         <div className=" w-full pt-4">
-          <p className="text-2xl font-semibold ">Let’s Get Started!</p>
+          <p className="text-2xl font-semibold ">Let's Get Started!</p>
           <p className="text-sm  pt-4">
            Welcome to UniHub! Please enter your details to create an account.
           </p>

@@ -4,8 +4,6 @@ import Link from "next/link";
 import React from "react";
 import {
   PiPencilLine,
-  PiPlug,
-  PiPuzzlePiece,
   PiRocket,
   PiSignOut,
   PiUsers,
@@ -58,20 +56,6 @@ function UserModal() {
               <span className="">UniHub Community</span>
             </Link>
           </li>
-          {/* <li className="flex justify-start items-center gap-2 p-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full">
-            <PiPuzzlePiece className="text-xl" />
-            <span className="">Get UniHub Extension</span>
-          </li>
-          <li
-            className="flex justify-start items-center gap-2 p-3 rounded-lg border border-transparent hover:border-primaryColor/30  hover:bg-primaryColor/5 duration-300 cursor-pointer w-full"
-            onClick={() => {
-              modalOpen("Integrations");
-              setModal(false);
-            }}
-          >
-            <PiPlug className="text-xl" />
-            <span className="">Integrations</span>
-          </li> */}
           <li className="w-full">
             <Link
               href={"/upgrade-plan"}

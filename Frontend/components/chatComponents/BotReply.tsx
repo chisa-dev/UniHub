@@ -49,6 +49,33 @@ function BotReply({ replyType, setScroll, isAnimation }: BotReplyProps) {
   ].includes(replyType);
 
   useEffect(() => {
+    if (replyType === "emptyQuery") {
+      emptyQuery();
+      hideSuggestions();
+      const timeouts = [
+        setTimeout(() => {
+          setShowElements({
+            generatingMessage: true,
+            botReplyText: true,
+            preview: true,
+            lastMessage: true,
+          });
+        }, 1000),
+      ];
+      return () => {
+        timeouts.forEach(clearTimeout);
+      };
+    } else {
+      setShowElements({
+        generatingMessage: true,
+        botReplyText: true,
+        preview: true,
+        lastMessage: true,
+      });
+    }
+  }, [replyType, emptyQuery, hideSuggestions, setScroll, isAnimation]);
+
+  useEffect(() => {
     if (isAnimation) {
       const timeouts = [
         setTimeout(() => {

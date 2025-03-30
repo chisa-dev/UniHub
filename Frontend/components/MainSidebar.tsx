@@ -8,12 +8,10 @@ import {
   PiCaretDown,
   PiCaretUp,
   PiChatTeardropText,
-  PiDeviceMobileCamera,
   PiDiamondsFour,
   PiDotsThreeBold,
   PiGear,
   PiMagnifyingGlass,
-  PiPaintBucket,
   PiPencilLine,
   PiQuestion,
   PiRobot,
@@ -33,11 +31,12 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const { modalOpen } = useMainModal();
   const { chatList } = useChatHandler();
   const [showAllRecentChats, setShowAllRecentChats] = useState(false);
+  
   useEffect(() => {
     if (window.innerWidth > 992) {
       setShowSidebar(true);
     }
-  }, []);
+  }, [setShowSidebar]);
 
   return (
     <div
