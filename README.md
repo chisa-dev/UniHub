@@ -2,6 +2,7 @@
 
 UniHub is a **Gen AI-Powered Academic Productivity Platform** utilizing the **Retrieval-Augmented Generation (RAG)** model to help students learn more **effectively** and **efficiently** based on the context of the content.
 
+![UniHub Banner](docs/images/signin_banner.png)
 ## 🚀 Features
 - **AI-powered learning assistant** that provides contextual answers.
 - **Smart retrieval of academic resources** to enhance learning.
