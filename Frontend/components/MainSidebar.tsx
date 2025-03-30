@@ -178,17 +178,17 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             >
               <span className="flex justify-center  items-center gap-2 ">
                 <PiQuestion size={20} className="text-primaryColor" />
-                <span className="text-sm">Support</span>
+                <span className="text-sm">Help</span>
               </span>
               <span className="block size-1 rounded-full bg-successColor"></span>
             </button>
-            <Link
+            {/* <Link
               href={"/custom-bots"}
               className="flex justify-start py-3 px-6 items-center gap-2 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500 w-full "
             >
               <PiPaintBucket size={20} className="text-primaryColor" />
               <span className="text-sm ">Custom Bots</span>
-            </Link>
+            </Link> */}
             <button
               className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
               onClick={() => modalOpen("Settings")}
@@ -201,7 +201,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             </button>
           </div>
 
-          <div className="flex justify-between items-center rounded-xl py-3 px-6 bg-primaryColor/5 border border-primaryColor/30">
+          {/* <div className="flex justify-between items-center rounded-xl py-3 px-6 bg-primaryColor/5 border border-primaryColor/30">
             <button className="flex justify-center  items-center gap-2 font-medium   text-primaryColor ">
               <PiDeviceMobileCamera size={20} className="" />
               <span className="text-sm ">Get App</span>
@@ -210,7 +210,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             <span className="px-3 py-1 rounded-full border bg-secondaryColor/5   border-secondaryColor/30 text-secondaryColor text-xs">
               New
             </span>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

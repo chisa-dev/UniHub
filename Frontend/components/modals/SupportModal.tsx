@@ -93,7 +93,7 @@ function SupportModal() {
             <div className="">
               <div className="flex justify-between items-center">
                 <p className="text-sm font-medium text-n700 dark:text-n30">
-                  2.1v Flash
+                  GPT-4o
                 </p>
                 <p className="text-xs font-medium border border-secondaryColor/30 bg-secondaryColor/5 rounded-full py-1 px-3 text-secondaryColor">
                   New
