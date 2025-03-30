@@ -26,7 +26,7 @@ A robust Node.js backend API for the UniHub platform, built with clean architect
    ```bash
    npm install
    ```
-3. Copy `.env.example` to `.env` and update the values:
+3. Copy `.env.example` to `.env` and update all values:
    ```bash
    cp .env.example .env
    ```

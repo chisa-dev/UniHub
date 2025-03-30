@@ -13,7 +13,7 @@ This is the frontend client for the UniHub project, built with Next.js 14 and mo
 ## Prerequisites
 
 - Node.js 18.x or later
-- npm, yarn, pnpm, or bun package manager
+- npm, yarn, pnpm, or bun package managers
 
 ## Getting Started
 
