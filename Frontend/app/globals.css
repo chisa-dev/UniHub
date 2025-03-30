@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-inter);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Scroll bar */
+::-webkit-scrollbar-track {
+  -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  background-color: #a7a7a71f;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  background-color: #a7a7a71f;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #4d6bfe;
+}
+/* For Chrome, Safari, Edge, and Opera */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* For Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+@layer components {
+  /* Typography */
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply m-0 p-0 !leading-[120%];
+  }
+  p {
+    @apply !leading-[150%];
+  }
+
+  /* Main Container styles */
+  .container {
+    @apply mx-auto max-sm:max-w-[90%] sm:max-w-[540px] md:max-w-[720px] lg:max-w-[960px] xl:max-w-[1140px] xxl:max-w-[1296px];
+  }
+  .large-container {
+    @apply mx-auto 4xl:max-w-[1760px];
+  }
+
+  /* stp = section top padding, sbp= section bottom padding */
+  .stp-30 {
+    @apply pt-16 md:pt-24 xl:pt-30;
+  }
+  .sbp-30 {
+    @apply pb-16 md:pb-24 xl:pb-30;
+  }
+  .stp-15 {
+    @apply pt-8 md:pt-12 xl:pt-15;
+  }
+  .sbp-15 {
+    @apply pb-8 md:pb-12 xl:pb-15;
+  }
+}
+
+/* Keyframe animation */
+.circle {
+  animation: circleAnimation 5s linear;
+}
+@keyframes circleAnimation {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(0.9);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+pre {
+  white-space: pre-line;
+  word-wrap: break-word;
+  text-align: justify;
+}
