@@ -44,7 +44,7 @@ jobs:
     - name: Create .env file
       run: |
         cd Backend
-        echo "PORT=3000" >> .env
+        echo "PORT=3000" > .env
         echo "NODE_ENV=test" >> .env
         echo "DB_HOST=localhost" >> .env
         echo "DB_USER=root" >> .env
@@ -54,11 +54,29 @@ jobs:
         echo "JWT_EXPIRES_IN=1h" >> .env
         
     - name: Run database migrations
+      env:
+        PORT: 3000
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_USER: root
+        DB_PASSWORD: root
+        DB_NAME: unihub_test_db
+        JWT_SECRET: test_secret
+        JWT_EXPIRES_IN: 1h
       run: |
         cd Backend
         npm run migrate
       
     - name: Run tests
+      env:
+        PORT: 3000
+        NODE_ENV: test
+        DB_HOST: localhost
+        DB_USER: root
+        DB_PASSWORD: root
+        DB_NAME: unihub_test_db
+        JWT_SECRET: test_secret
+        JWT_EXPIRES_IN: 1h
       run: |
         cd Backend
         npm test 
