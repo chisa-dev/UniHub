@@ -13,7 +13,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     updateChatList();
-  }, []);
+  }, [updateChatList]);
 
   return (
     <div className="text-n500 bg-white relative z-10 h-dvh overflow-hidden dark:bg-n0 dark:text-n30">

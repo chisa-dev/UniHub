@@ -4,7 +4,7 @@ UniHub is a **Gen AI-Powered Academic Productivity Platform** utilizing the **Re
 
 ![UniHub Banner](docs/images/signin_banner.png)
 <p align="center">
-  🔗 <a href="https://www.unihub.com" style="font-size: 18px"><b>www.unihub.com</b></a>
+  🔗 <a href="https://unihub-web.vercel.app" style="font-size: 18px"><b>www.unihub.com</b></a>
 </p>
 
 ## 🚀 Features

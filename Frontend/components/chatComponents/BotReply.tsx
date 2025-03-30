@@ -114,7 +114,7 @@ function BotReply({ replyType, setScroll, isAnimation }: BotReplyProps) {
         lastMessage: true,
       });
     }
-  }, []);
+  }, [isAnimation, hideSuggestions, setScroll, emptyQuery]);
   return (
     <div className="flex justify-start items-start gap-1 sm:gap-3  w-full max-w-[90%]  ">
       <Image src={logo} alt="" className=" max-sm:size-5 object-cover" />
