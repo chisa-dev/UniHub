@@ -3,7 +3,10 @@ const app = require('../app');
 const db = require('../config/database');
 
 describe('Authentication Endpoints', () => {
+  let server;
+
   beforeAll(async () => {
+    server = app.listen(0); // Use random port for testing
     // Clear users table before tests
     await db.query('DELETE FROM users');
   });
@@ -11,6 +14,10 @@ describe('Authentication Endpoints', () => {
   afterAll(async () => {
     // Clear users table after tests
     await db.query('DELETE FROM users');
+    // Close the database connection pool
+    await db.end();
+    // Close the server
+    await new Promise((resolve) => server.close(resolve));
   });
 
   describe('POST /api/v1/auth/signup', () => {

@@ -30,9 +30,13 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
-});
+
+// Only start the server if we're not in a test environment
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
+  });
+}
 
 module.exports = app; 
