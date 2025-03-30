@@ -51,7 +51,6 @@ function BotReply({ replyType, setScroll, isAnimation }: BotReplyProps) {
   useEffect(() => {
     if (replyType === "emptyQuery") {
       emptyQuery();
-      hideSuggestions();
       const timeouts = [
         setTimeout(() => {
           setShowElements({
