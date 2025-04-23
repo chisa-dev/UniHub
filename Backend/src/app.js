@@ -31,7 +31,14 @@ app.use(cors({
   origin: process.env.FRONTEND_URL || '*',
   credentials: true
 }));
-app.use(helmet());
+
+// Configure helmet but allow Swagger UI resources
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -69,7 +76,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: process.env.API_URL || 'http://localhost:3000/api',
+        url: process.env.API_URL || (process.env.NODE_ENV === 'production' ? 'https://uni-hub-backend.vercel.app/api' : 'http://localhost:3000/api'),
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
     ],
@@ -88,16 +95,16 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
-// Root route
+// Root route - redirect to Swagger docs
 app.get('/', (req, res) => {
-  res.json({
-    message: 'UniHub API is running',
-    timestamp: new Date().toISOString()
-  });
+  res.redirect('/api-docs');
 });
 
 // Swagger UI route
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { 
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }' 
+}));
 
 // API routes
 app.use('/api/status', statusRoutes);
