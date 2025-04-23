@@ -1,5 +1,4 @@
 "use client";
-import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import MainSidebar from "@/components/MainSidebar";
 import MainModal from "@/components/modals/MainModal";
@@ -32,7 +31,6 @@ export function WithLayoutLayout({ children }: { children: React.ReactNode }) {
           <div className="w-full max-w-[1070px] mx-auto flex-1 overflow-y-auto no-scrollbar">
             {children}
           </div>
-          <Footer />
         </div>
       </div>
 

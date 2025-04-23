@@ -5,6 +5,8 @@ import { useMainModal } from "@/stores/modal";
 import UpgradeModal from "./header/UpgradeModal";
 import ThemeSwitch from "./ThemeSwitch";
 import { usePathname } from "next/navigation";
+import { useLanguageStore } from "@/stores/languageStore";
+import { useTranslation } from "react-i18next";
 
 type HeaderProps = {
   showSidebar: boolean;
@@ -15,17 +17,22 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
   const { modalOpen } = useMainModal();
   const path = usePathname();
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
-  const [selectedLanguage, setSelectedLanguage] = useState("English");
+  const { currentLanguage, setLanguage } = useLanguageStore();
+  const { t } = useTranslation();
 
   const languages = [
     { id: "en", name: "English" },
     { id: "am", name: "Amharic" },
-    { id: "or", name: "Afaan Oromo" },
+    { id: "om", name: "Afaan Oromo" },
   ];
 
-  const handleLanguageChange = (language: string) => {
-    setSelectedLanguage(language);
+  const handleLanguageChange = (langId: string) => {
+    setLanguage(langId);
     setShowLanguageDropdown(false);
+  };
+
+  const getCurrentLanguageName = () => {
+    return languages.find(lang => lang.id === currentLanguage)?.name || "English";
   };
 
   return (
@@ -49,7 +56,7 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
             className="flex justify-center items-center gap-1 py-2 px-2 sm:px-3 rounded-full border border-primaryColor/20 hover:border-primaryColor/50 text-n500 dark:text-n30"
           >
             <PiGlobe className="text-primaryColor" />
-            <span className="text-xs font-medium max-sm:hidden">{selectedLanguage}</span>
+            <span className="text-xs font-medium max-sm:hidden">{getCurrentLanguageName()}</span>
             <PiCaretDown className="text-xs" />
           </button>
           
@@ -58,9 +65,9 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
               {languages.map((language) => (
                 <button
                   key={language.id}
-                  onClick={() => handleLanguageChange(language.name)}
+                  onClick={() => handleLanguageChange(language.id)}
                   className={`w-full text-left px-3 py-2 text-sm hover:bg-primaryColor/5 ${
-                    selectedLanguage === language.name 
+                    currentLanguage === language.id 
                       ? "text-primaryColor font-medium" 
                       : "text-n500 dark:text-n30"
                   }`}
@@ -79,7 +86,7 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
           >
             <PiUploadSimple />
             <span className="text-xs font-medium max-[400px]:hidden">
-              Share
+              {t('common.share')}
             </span>
           </button>
         )}

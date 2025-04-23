@@ -17,11 +17,11 @@ import {
   PiNote,
   PiGear,
   PiQuestion,
-  PiDotsThreeBold,
 } from "react-icons/pi";
 import Link from "next/link";
 import { useMainModal } from "@/stores/modal";
 import { usePathname } from "next/navigation";
+import { useTranslation } from "react-i18next";
 
 type MainSidebarProps = {
   showSidebar: boolean;
@@ -32,6 +32,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const { modalOpen } = useMainModal();
   const pathname = usePathname();
   const [showTopics, setShowTopics] = useState(false);
+  const { t } = useTranslation();
   
   // Mock data for started topics
   const startedTopics = [
@@ -56,42 +57,42 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const navItems = [
     { 
       path: "/home", 
-      name: "Home", 
+      name: t('sidebar.home'), 
       icon: <PiHouseLine size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/assistance", 
-      name: "Assistance", 
+      name: t('sidebar.assistance'), 
       icon: <PiRobot size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/calendar", 
-      name: "Calendar", 
+      name: t('sidebar.calendar'), 
       icon: <PiCalendar size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/insights", 
-      name: "Insights", 
+      name: t('sidebar.insights'), 
       icon: <PiChartLine size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/tests-quizfetch", 
-      name: "Tests & QuizFetch", 
+      name: t('sidebar.testsQuizfetch'), 
       icon: <PiExam size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/tutor-me", 
-      name: "Tutor Me", 
+      name: t('sidebar.tutorMe'), 
       icon: <PiChalkboardTeacher size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/audio-recap", 
-      name: "Audio Recap", 
+      name: t('sidebar.audioRecap'), 
       icon: <PiSpeakerHigh size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/notes-materials", 
-      name: "Notes and Materials", 
+      name: t('sidebar.notesMaterials'), 
       icon: <PiNote size={20} className="text-primaryColor" /> 
     },
   ];
@@ -139,7 +140,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             >
               <span className="flex items-center gap-2 font-medium">
                 <PiAlignLeft size={20} className="text-primaryColor" />
-                <span className="text-sm">Started Topics/Sets</span>
+                <span className="text-sm">{t('sidebar.startedTopics')}</span>
               </span>
               {showTopics ? (
                 <PiCaretUp className="text-primaryColor" />
@@ -184,15 +185,15 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
         </div>
 
         {/* Bottom Section */}
-        <div className="">
-          <div className="flex flex-col gap-1 justify-start items-start pb-2 ">
+        <div className="space-y-4">
+          <div className="flex flex-col gap-1 justify-start items-start">
             <button
               className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
               onClick={() => modalOpen("Support Modal")}
             >
               <span className="flex justify-center items-center gap-2 ">
                 <PiQuestion size={20} className="text-primaryColor" />
-                <span className="text-sm">Help</span>
+                <span className="text-sm">{t('sidebar.help')}</span>
               </span>
               <span className="block size-1 rounded-full bg-successColor"></span>
             </button>
@@ -202,10 +203,17 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             >
               <span className="flex justify-center items-center gap-2 ">
                 <PiGear size={20} className="text-primaryColor" />
-                <span className="text-sm">Settings</span>
+                <span className="text-sm">{t('sidebar.settings')}</span>
               </span>
               <span className="block size-1 rounded-full bg-successColor"></span>
             </button>
+          </div>
+          
+          {/* Copyright text */}
+          <div className="px-6 pb-2">
+            <p className="text-xs text-n500/60 dark:text-n30/60 text-center">
+              {t('footer.copyright')}
+            </p>
           </div>
         </div>
       </div>

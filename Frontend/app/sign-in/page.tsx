@@ -4,7 +4,6 @@ import displayImg from "@/public/images/sign-in-page-img.png";
 import Image from "next/image";
 import FormInput from "@/components/ui/FormInput";
 import GradientBackground from "@/components/ui/GradientBackground";
-import Footer from "@/components/Footer";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
@@ -105,10 +104,6 @@ function SignIn() {
               </div>
             </div>
           </div> */}
-        </div>
-
-        <div className="flex justify-center items-center w-full pt-4">
-          <Footer />
         </div>
       </div>
       <div className="w-1/2 max-xxl:hidden max-h-dvh overflow-hidden ">
