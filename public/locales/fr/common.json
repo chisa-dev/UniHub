@@ -1,0 +1,19 @@
+{
+  "sidebar": {
+    "home": "Accueil",
+    "assistance": "Assistance",
+    "calendar": "Calendrier",
+    "insights": "Insights",
+    "tests": "Tests et QuizFetch",
+    "tutoring": "Tutorat",
+    "audioRecap": "Récapitulatif audio",
+    "notes": "Notes et matériel"
+  },
+  "profile": {
+    "settings": "Paramètres",
+    "upgrade": "Mise à niveau"
+  },
+  "footer": {
+    "copyright": "© 2023 UniHub. Tous droits réservés."
+  }
+} 

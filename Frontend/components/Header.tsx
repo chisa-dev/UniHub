@@ -1,5 +1,5 @@
-import React from "react";
-import { PiList, PiUploadSimple } from "react-icons/pi";
+import React, { useState } from "react";
+import { PiList, PiUploadSimple, PiCaretDown, PiGlobe } from "react-icons/pi";
 import UserModal from "./header/UserModal";
 import { useMainModal } from "@/stores/modal";
 import UpgradeModal from "./header/UpgradeModal";
@@ -14,6 +14,19 @@ type HeaderProps = {
 function Header({ showSidebar, setShowSidebar }: HeaderProps) {
   const { modalOpen } = useMainModal();
   const path = usePathname();
+  const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("English");
+
+  const languages = [
+    { id: "en", name: "English" },
+    { id: "am", name: "Amharic" },
+    { id: "or", name: "Afaan Oromo" },
+  ];
+
+  const handleLanguageChange = (language: string) => {
+    setSelectedLanguage(language);
+    setShowLanguageDropdown(false);
+  };
 
   return (
     <div className="px-6 py-3 flex justify-between items-center w-full sticky top-0 left-0 right-0 bg-white z-30 dark:bg-n0">
@@ -28,6 +41,37 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
       </div>
       <div className="flex justify-start items-center gap-2 sm:gap-4 ">
         <ThemeSwitch />
+        
+        {/* Language Selector */}
+        <div className="relative">
+          <button 
+            onClick={() => setShowLanguageDropdown(!showLanguageDropdown)}
+            className="flex justify-center items-center gap-1 py-2 px-2 sm:px-3 rounded-full border border-primaryColor/20 hover:border-primaryColor/50 text-n500 dark:text-n30"
+          >
+            <PiGlobe className="text-primaryColor" />
+            <span className="text-xs font-medium max-sm:hidden">{selectedLanguage}</span>
+            <PiCaretDown className="text-xs" />
+          </button>
+          
+          {showLanguageDropdown && (
+            <div className="absolute top-full right-0 mt-1 bg-white dark:bg-n0 border border-primaryColor/20 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+              {languages.map((language) => (
+                <button
+                  key={language.id}
+                  onClick={() => handleLanguageChange(language.name)}
+                  className={`w-full text-left px-3 py-2 text-sm hover:bg-primaryColor/5 ${
+                    selectedLanguage === language.name 
+                      ? "text-primaryColor font-medium" 
+                      : "text-n500 dark:text-n30"
+                  }`}
+                >
+                  {language.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+        
         {path.includes("chat") && (
           <button
             onClick={() => modalOpen("Share Public Link")}

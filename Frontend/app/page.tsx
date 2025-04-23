@@ -1,6 +1,5 @@
-import React from "react";
-import SignIn from "./sign-in/page";
+import { redirect } from "next/navigation";
 
-export default function page() {
-  return <SignIn />;
+export default function Home() {
+  redirect("/home");
 }

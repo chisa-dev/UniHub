@@ -1,0 +1,19 @@
+{
+  "sidebar": {
+    "home": "الصفحة الرئيسية",
+    "assistance": "المساعدة",
+    "calendar": "التقويم",
+    "insights": "الرؤى",
+    "tests": "الاختبارات وQuizFetch",
+    "tutoring": "دروس خصوصية",
+    "audioRecap": "الملخص الصوتي",
+    "notes": "الملاحظات والمواد"
+  },
+  "profile": {
+    "settings": "الإعدادات",
+    "upgrade": "ترقية"
+  },
+  "footer": {
+    "copyright": "© 2023 UniHub. جميع الحقوق محفوظة."
+  }
+} 
