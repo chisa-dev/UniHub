@@ -15,6 +15,7 @@ const calendarRoutes = require('./routes/calendar.routes');
 const tutoringRoutes = require('./routes/tutoring.routes');
 const audioRoutes = require('./routes/audio.routes');
 const aiAssistantRoutes = require('./routes/ai-assistant.routes');
+const statusRoutes = require('./routes/status.routes');
 
 const app = express();
 
@@ -83,12 +84,8 @@ const swaggerSpec = swaggerJsdoc(swaggerOptions);
 // Swagger UI route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Health check endpoint (no auth required)
-app.get('/api/status', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date() });
-});
-
 // API routes
+app.use('/api/status', statusRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/topics', topicRoutes);
 app.use('/api/quizzes', quizRoutes);

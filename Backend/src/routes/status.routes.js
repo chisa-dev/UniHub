@@ -4,7 +4,7 @@ const statusController = require('../controllers/status.controller');
 
 /**
  * @swagger
- * /api/v1/status:
+ * /status:
  *   get:
  *     summary: Check API and database health
  *     tags: [Status]
@@ -25,6 +25,6 @@ const statusController = require('../controllers/status.controller');
  *       500:
  *         description: Server error
  */
-router.get('/', statusController.checkHealth);
+router.get('', statusController.checkHealth);
 
 module.exports = router; 
