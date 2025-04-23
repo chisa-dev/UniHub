@@ -1,21 +1,24 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const db = require('../config/database');
+const { v4: uuidv4 } = require('uuid');
+const sequelize = require('../config/database');
 
 const signup = async (req, res) => {
-  try {
-    const { firstName, lastName, username, password } = req.body;
+  const { username, email, password, fullName } = req.body;
 
-    // Check if username already exists
-    const [existingUsers] = await db.query(
-      'SELECT id FROM users WHERE username = ?',
-      [username]
+  try {
+    // Check if user exists
+    const [existingUser] = await sequelize.query(
+      'SELECT * FROM users WHERE username = ? OR email = ?',
+      {
+        replacements: [username, email],
+        type: sequelize.QueryTypes.SELECT,
+      }
     );
 
-    if (existingUsers.length > 0) {
-      return res.status(409).json({
-        status: 'error',
-        message: 'Username already exists'
+    if (existingUser) {
+      return res.status(409).json({ 
+        message: 'User already exists with this username or email' 
       });
     }
 
@@ -23,81 +26,78 @@ const signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert new user
-    const [result] = await db.query(
-      'INSERT INTO users (firstName, lastName, username, password) VALUES (?, ?, ?, ?)',
-      [firstName, lastName, username, hashedPassword]
+    // Create user
+    await sequelize.query(
+      `INSERT INTO users (id, username, email, password_hash, full_name) 
+       VALUES (?, ?, ?, ?, ?)`,
+      {
+        replacements: [
+          uuidv4(),
+          username,
+          email,
+          hashedPassword,
+          fullName || null
+        ],
+      }
     );
 
-    res.status(201).json({
-      status: 'success',
-      message: 'User created successfully',
-      userId: result.insertId
-    });
+    res.status(201).json({ message: 'User created successfully' });
   } catch (error) {
     console.error('Signup error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Error creating user'
-    });
+    res.status(500).json({ message: 'Error creating user' });
   }
 };
 
-const signin = async (req, res) => {
+const login = async (req, res) => {
+  const { email, password } = req.body;
+
   try {
-    const { username, password } = req.body;
-
-    // Get user
-    const [users] = await db.query(
-      'SELECT * FROM users WHERE username = ?',
-      [username]
+    // Find user
+    const [user] = await sequelize.query(
+      'SELECT * FROM users WHERE email = ?',
+      {
+        replacements: [email],
+        type: sequelize.QueryTypes.SELECT,
+      }
     );
 
-    if (users.length === 0) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid credentials'
-      });
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    const user = users[0];
-
-    // Verify password
-    const isValidPassword = await bcrypt.compare(password, user.password);
+    // Check password
+    const isValidPassword = await bcrypt.compare(password, user.password_hash);
     if (!isValidPassword) {
-      return res.status(401).json({
-        status: 'error',
-        message: 'Invalid credentials'
-      });
+      return res.status(401).json({ message: 'Invalid credentials' });
     }
 
-    // Generate JWT token
+    // Generate token
     const token = jwt.sign(
-      { userId: user.id, username: user.username },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
-    );
-
-    res.json({
-      status: 'success',
-      token,
-      user: {
+      { 
         id: user.id,
         username: user.username,
-        firstName: user.firstName,
-        lastName: user.lastName
-      }
+        email: user.email,
+        role: user.role
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+
+    // Remove sensitive data
+    delete user.password_hash;
+
+    res.json({
+      message: 'Login successful',
+      token,
+      user
     });
   } catch (error) {
-    console.error('Signin error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Error signing in'
-    });
+    console.error('Login error:', error);
+    res.status(500).json({ message: 'Error during login' });
   }
 };
 
 module.exports = {
   signup,
-  signin
+  login
 }; 

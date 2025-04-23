@@ -1,14 +1,22 @@
 const express = require('express');
 const router = express.Router();
+const { body } = require('express-validator');
 const authController = require('../controllers/auth.controller');
-const { validateSignup, validateSignin } = require('../middleware/validators');
+const validate = require('../middleware/validate');
 
 /**
  * @swagger
- * /api/v1/auth/signup:
+ * tags:
+ *   name: Authentication
+ *   description: User authentication endpoints
+ */
+
+/**
+ * @swagger
+ * /auth/signup:
  *   post:
  *     summary: Register a new user
- *     tags: [Auth]
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -16,39 +24,48 @@ const { validateSignup, validateSignin } = require('../middleware/validators');
  *           schema:
  *             type: object
  *             required:
- *               - firstName
- *               - lastName
  *               - username
+ *               - email
  *               - password
  *             properties:
- *               firstName:
- *                 type: string
- *                 example: John
- *               lastName:
- *                 type: string
- *                 example: Doe
  *               username:
  *                 type: string
- *                 example: johndoe
+ *                 minLength: 3
+ *                 maxLength: 50
+ *               email:
+ *                 type: string
+ *                 format: email
  *               password:
  *                 type: string
- *                 example: password123
+ *                 minLength: 6
+ *               fullName:
+ *                 type: string
  *     responses:
  *       201:
  *         description: User created successfully
  *       400:
- *         description: Invalid input
+ *         description: Invalid input data
  *       409:
- *         description: Username already exists
+ *         description: User already exists
  */
-router.post('/signup', validateSignup, authController.signup);
+router.post(
+  '/signup',
+  [
+    body('username').trim().isLength({ min: 3, max: 50 }),
+    body('email').isEmail().normalizeEmail(),
+    body('password').isLength({ min: 6 }),
+    body('fullName').optional().trim(),
+    validate
+  ],
+  authController.signup
+);
 
 /**
  * @swagger
- * /api/v1/auth/signin:
+ * /auth/login:
  *   post:
- *     summary: Login user
- *     tags: [Auth]
+ *     summary: Authenticate user and get token
+ *     tags: [Authentication]
  *     requestBody:
  *       required: true
  *       content:
@@ -56,15 +73,14 @@ router.post('/signup', validateSignup, authController.signup);
  *           schema:
  *             type: object
  *             required:
- *               - username
+ *               - email
  *               - password
  *             properties:
- *               username:
+ *               email:
  *                 type: string
- *                 example: johndoe
+ *                 format: email
  *               password:
  *                 type: string
- *                 example: password123
  *     responses:
  *       200:
  *         description: Login successful
@@ -75,10 +91,19 @@ router.post('/signup', validateSignup, authController.signup);
  *               properties:
  *                 token:
  *                   type: string
- *                   example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+ *                 user:
+ *                   type: object
  *       401:
  *         description: Invalid credentials
  */
-router.post('/signin', validateSignin, authController.signin);
+router.post(
+  '/login',
+  [
+    body('email').isEmail().normalizeEmail(),
+    body('password').exists(),
+    validate
+  ],
+  authController.login
+);
 
 module.exports = router; 

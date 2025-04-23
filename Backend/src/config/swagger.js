@@ -6,18 +6,30 @@ const options = {
     info: {
       title: 'UniHub API Documentation',
       version: '1.0.0',
-      description: 'API documentation for UniHub backend',
+      description: 'API documentation for UniHub application',
     },
     servers: [
       {
-        url: `http://localhost:${process.env.PORT || 3000}`,
+        url: 'http://localhost:3000/api',
         description: 'Development server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+    },
+    security: [
+      {
+        bearerAuth: [],
       },
     ],
   },
   apis: ['./src/routes/*.js'], // Path to the API routes
 };
 
-const swaggerSpec = swaggerJsdoc(options);
-
-module.exports = swaggerSpec; 
+module.exports = swaggerJsdoc(options); 

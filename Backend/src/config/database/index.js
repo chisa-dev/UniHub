@@ -1,13 +1,22 @@
-const mysql = require('mysql2/promise');
+const { Sequelize } = require('sequelize');
+require('dotenv').config();
 
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
+const sequelize = new Sequelize(
+  process.env.DB_NAME || 'unihub_db',
+  process.env.DB_USER || 'root',
+  process.env.DB_PASSWORD || 'admin',
+  {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 3306,
+    dialect: 'mysql',
+    logging: process.env.NODE_ENV === 'development' ? console.log : false,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
+  }
+);
 
-module.exports = pool; 
+module.exports = sequelize; 
