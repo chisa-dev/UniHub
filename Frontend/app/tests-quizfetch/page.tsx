@@ -10,8 +10,7 @@ import {
   PiListChecks,
   PiChats,
   PiQuestion,
-  PiCheck,
-  PiX
+  PiCheck
 } from "react-icons/pi";
 
 const TestsQuizFetch = () => {

@@ -2,21 +2,22 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const sequelize = require('../config/database');
+const { QueryTypes } = require('sequelize');
 
 const signup = async (req, res) => {
   const { username, email, password, fullName } = req.body;
 
   try {
     // Check if user exists
-    const [existingUser] = await sequelize.query(
+    const existingUser = await sequelize.query(
       'SELECT * FROM users WHERE username = ? OR email = ?',
       {
         replacements: [username, email],
-        type: sequelize.QueryTypes.SELECT,
+        type: QueryTypes.SELECT,
       }
     );
 
-    if (existingUser) {
+    if (existingUser.length > 0) {
       return res.status(409).json({ 
         message: 'User already exists with this username or email' 
       });
@@ -26,18 +27,24 @@ const signup = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Get current timestamp
+    const now = new Date();
+
     // Create user
     await sequelize.query(
-      `INSERT INTO users (id, username, email, password_hash, full_name) 
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO users (id, username, email, password_hash, full_name, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
       {
         replacements: [
           uuidv4(),
           username,
           email,
           hashedPassword,
-          fullName || null
+          fullName || null,
+          now,
+          now
         ],
+        type: QueryTypes.INSERT
       }
     );
 
@@ -57,7 +64,7 @@ const login = async (req, res) => {
       'SELECT * FROM users WHERE email = ?',
       {
         replacements: [email],
-        type: sequelize.QueryTypes.SELECT,
+        type: QueryTypes.SELECT,
       }
     );
 

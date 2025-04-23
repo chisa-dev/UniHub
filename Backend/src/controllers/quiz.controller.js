@@ -80,7 +80,7 @@ const getQuiz = async (req, res) => {
     }
 
     // Get questions
-    const [questions] = await sequelize.query(
+    const [results] = await sequelize.query(
       'SELECT * FROM quiz_questions WHERE quiz_id = ?',
       {
         replacements: [req.params.id],
@@ -88,15 +88,22 @@ const getQuiz = async (req, res) => {
       }
     );
 
+    const questions = Array.isArray(results) ? results : [results];
+
+    if (!questions || questions.length === 0) {
+      return res.status(404).json({ message: 'No questions found for this quiz' });
+    }
+
     // Don't send correct answers if user hasn't attempted the quiz yet
     const sanitizedQuestions = questions.map(q => ({
-      ...q,
-      correctAnswer: undefined,
-      explanation: undefined
+      id: q.id,
+      question: q.question,
+      options: q.options,
+      quiz_id: q.quiz_id
     }));
 
-    res.json({
-      ...quiz,
+    res.status(200).json({
+      quiz,
       questions: sanitizedQuestions
     });
   } catch (error) {
