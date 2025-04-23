@@ -164,7 +164,7 @@ const TutorMe = () => {
               </div>
               
               <div className="flex justify-between items-center text-sm border-t border-primaryColor/10 pt-4 mt-6">
-                <span className="text-n300 dark:text-n400">You'll receive a notification when your session is confirmed.</span>
+                <span className="text-n300 dark:text-n400">You&apos;ll receive a notification when your session is confirmed.</span>
                 <button className="py-2 px-6 bg-primaryColor text-white rounded-xl font-medium">
                   Create Session
                 </button>

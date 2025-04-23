@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import Image from "next/image";
-import { PiRobot, PiUser, PiPaperPlaneRight, PiPaperclip, PiCopy, PiPencilSimpleLine } from "react-icons/pi";
+import { PiRobot, PiPaperPlaneRight, PiPaperclip, PiCopy, PiPencilSimpleLine } from "react-icons/pi";
 import logo from "@/public/images/favicon.png";
 
 const Assistance = () => {
@@ -10,7 +10,7 @@ const Assistance = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
   // Mock conversation
-  const conversation = [
+  const conversation = useMemo(() => [
     { 
       id: 1, 
       sender: "ai", 
@@ -26,7 +26,7 @@ const Assistance = () => {
       sender: "ai", 
       content: "Of course! Photosynthesis is the process by which plants, algae, and certain bacteria convert light energy into chemical energy. The process primarily takes place in the chloroplasts of plant cells, specifically in structures called thylakoids. During photosynthesis, plants take in carbon dioxide (CO2) from the air and water (H2O) from the soil, and using energy from sunlight, convert these ingredients into glucose (C6H12O6) and oxygen (O2). The basic equation for photosynthesis is: 6CO2 + 6H2O + light energy → C6H12O6 + 6O2. Would you like me to explain any specific part of this process in more detail?" 
     }
-  ];
+  ], []);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();

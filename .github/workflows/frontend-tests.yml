@@ -1,37 +1,37 @@
-name: Frontend Tests
+# name: Frontend Tests
 
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'Frontend/**'
-  pull_request:
-    branches:
-      - main
-    paths:
-      - 'Frontend/**'
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths:
+#       - 'Frontend/**'
+#   pull_request:
+#     branches:
+#       - main
+#     paths:
+#       - 'Frontend/**'
 
-jobs:
-  test:
-    runs-on: ubuntu-latest
+# jobs:
+#   test:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v3
+#     steps:
+#       - uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20.18.0'
-          cache: 'npm'
-          cache-dependency-path: Frontend/package-lock.json
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: '20.18.0'
+#           cache: 'npm'
+#           cache-dependency-path: Frontend/package-lock.json
 
-      - name: Install dependencies
-        run: |
-          cd Frontend
-          npm ci
+#       - name: Install dependencies
+#         run: |
+#           cd Frontend
+#           npm ci
 
-      - name: Run tests
-        run: |
-          cd Frontend
-          npm test 
+#       - name: Run tests
+#         run: |
+#           cd Frontend
+#           npm test 

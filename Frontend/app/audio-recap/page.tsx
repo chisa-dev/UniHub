@@ -8,22 +8,12 @@ import {
   PiUpload,
   PiTextAUnderline,
   PiDownload,
-  PiShareFat,
-  PiTrash,
-  PiFilePdf,
-  PiFileDoc,
-  PiFileCsv,
-  PiImage,
-  PiFileText,
-  PiTag,
-  PiFolder,
-  PiBookOpen,
-  PiClock,
   PiMicrophone,
   PiSlidersHorizontal,
   PiWaveform,
   PiClockCountdown,
-  PiListChecks
+  PiListChecks,
+  PiFolder
 } from "react-icons/pi";
 
 const AudioRecap = () => {

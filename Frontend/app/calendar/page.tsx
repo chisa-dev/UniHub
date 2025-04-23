@@ -60,7 +60,6 @@ const Calendar = () => {
   
   // Current month days
   for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(currentYear, currentMonth, day);
     const dayEvents = events.filter(event => 
       event.date.getDate() === day && 
       event.date.getMonth() === currentMonth && 
