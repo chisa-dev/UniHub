@@ -26,6 +26,12 @@ const config = {
     host: process.env.DB_HOST,
     dialect: 'mysql',
     logging: false,
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
     pool: {
       max: 5,
       min: 0,
@@ -35,16 +41,35 @@ const config = {
   }
 };
 
-const sequelize = new Sequelize(
-  config[env].database,
-  config[env].username,
-  config[env].password,
-  {
-    host: config[env].host,
-    dialect: config[env].dialect,
-    logging: config[env].logging,
-    pool: config[env].pool
-  }
-);
-
-module.exports = sequelize; 
+// Allow using DATABASE_URL environment variable (common in cloud deployments)
+if (process.env.DATABASE_URL && env === 'production') {
+  module.exports = new Sequelize(process.env.DATABASE_URL, {
+    dialect: 'mysql',
+    dialectOptions: {
+      ssl: {
+        require: true,
+        rejectUnauthorized: false
+      }
+    },
+    logging: false,
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 30000,
+      idle: 10000
+    }
+  });
+} else {
+  module.exports = new Sequelize(
+    config[env].database,
+    config[env].username,
+    config[env].password,
+    {
+      host: config[env].host,
+      dialect: config[env].dialect,
+      logging: config[env].logging,
+      dialectOptions: config[env].dialectOptions,
+      pool: config[env].pool
+    }
+  );
+} 

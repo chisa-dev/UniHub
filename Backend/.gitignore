@@ -34,3 +34,4 @@ temp/
 # Uploads
 uploads/
 uploads/audio/
+.vercel

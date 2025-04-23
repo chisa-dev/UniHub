@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const swaggerJsdoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
 const { sequelize } = require('./models');
+const path = require('path');
 
 // Import routes
 const authRoutes = require('./routes/auth.routes');
@@ -26,7 +27,10 @@ app.use((req, res, next) => {
 });
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || '*',
+  credentials: true
+}));
 app.use(helmet());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,7 +42,7 @@ const initializeDatabase = async () => {
     console.log('Database connection has been established successfully.');
     
     // In development, sync the database
-    if (process.env.NODE_ENV !== 'production') {
+    if (process.env.NODE_ENV === 'development') {
       // Drop all tables first
       await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
       await sequelize.sync({ force: true });
@@ -47,7 +51,10 @@ const initializeDatabase = async () => {
     }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
-    process.exit(1);
+    // Don't exit process in production as it will crash the serverless function
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 
@@ -62,8 +69,8 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: 'http://localhost:3000/api',
-        description: 'Development server',
+        url: process.env.API_URL || 'http://localhost:3000/api',
+        description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
     ],
     components: {
@@ -76,10 +83,18 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./src/routes/*.js'],
+  apis: [path.join(__dirname, 'routes/*.js')],
 };
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    message: 'UniHub API is running',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Swagger UI route
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
@@ -113,8 +128,12 @@ app.use((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-// Only start the server if we're not in a test environment
-if (process.env.NODE_ENV !== 'test') {
+// Initialize database in production without server.listen
+if (process.env.NODE_ENV === 'production') {
+  initializeDatabase().catch(err => console.error('Database init error:', err));
+} 
+// Only start the server if we're not in a test or production environment
+else if (process.env.NODE_ENV !== 'test') {
   initializeDatabase().then(() => {
     app.listen(PORT, () => {
       console.log(`Server is running on port ${PORT}`);
@@ -123,5 +142,5 @@ if (process.env.NODE_ENV !== 'test') {
   });
 }
 
-// Export the app for testing
+// Export the app for serverless functions
 module.exports = app; 
