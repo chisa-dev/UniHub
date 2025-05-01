@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
 import { PiPaperPlaneRight, PiLightning, PiSparkle } from "react-icons/pi";
@@ -180,7 +180,7 @@ const Assistance = () => {
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      handleSendMessage(e as any);
+      handleSendMessage(e as React.FormEvent);
     }
   };
   

@@ -82,7 +82,7 @@ function DeleteTopicDialog({
       <h2 className="text-lg font-medium mb-3">Delete Topic</h2>
       
       <p className="mb-6">
-        Are you sure you want to delete the topic "{topicTitle}"? This action cannot be undone.
+        Are you sure you want to delete the topic &quot;{topicTitle}&quot;? This action cannot be undone.
       </p>
       
       <div className="flex justify-end items-center gap-2 text-xs">

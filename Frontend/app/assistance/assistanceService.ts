@@ -54,7 +54,7 @@ export const assistanceService = {
     }
   },
   
-  async getTopicFilesCount(topicId: string): Promise<number> {
+  async getTopicFilesCount(_topicId: string): Promise<number> {
     try {
       if (isServer()) {
         return 0;
