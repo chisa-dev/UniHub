@@ -69,8 +69,9 @@ async function runMigrations() {
     path.join(__dirname, 'create_statistics_tables.sql'),
     path.join(__dirname, 'create_materials_table.sql'),
     path.join(__dirname, 'create_indexes.sql'),
-    path.join(__dirname, 'add_is_private_to_notes.sql')
-    
+    path.join(__dirname, 'add_is_private_to_notes.sql'),
+    path.join(__dirname, 'add_user_relations.sql'),
+    path.join(__dirname, 'update_calendar_fields.sql')
   ];
   
   let success = true;

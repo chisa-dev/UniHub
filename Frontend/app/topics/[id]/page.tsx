@@ -19,38 +19,12 @@ import { Topic, topicsService } from "../topicsService";
 import { getStatistics, TopicProgress } from "@/app/notes-materials/statistics.service";
 import { authService } from "@/app/auth/authService";
 import { getMaterialsByTopic } from "@/app/notes-materials/materials.service";
+import { getNotesByTopic, Note, NotesResponse } from "@/app/notes-materials/notes.service";
+import { getQuizzesByTopic, Quiz, QuizzesResponse } from "@/app/quizzes/quizzes.service";
 import EditTopicDialog from "@/components/modals/EditTopicDialog";
+import { API_ENDPOINTS } from '@/config/apiConfig';
 
 // Define interfaces for the API data
-interface Note {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-  topic_id: string;
-  is_private: number;
-  topic_title: string;
-  creator_name: string;
-}
-
-interface Quiz {
-  id: string;
-  title: string;
-  description: string;
-  topic_id: string;
-  creator_id: string;
-  is_public: number;
-  is_ai_generated: number;
-  created_at: string;
-  updated_at: string;
-  topic_title: string;
-  creator_name: string;
-  question_count: number;
-  attempt_count: number;
-}
-
 interface Material {
   id: string;
   topic_id: string;
@@ -61,24 +35,6 @@ interface Material {
   createdAt: string;
   updatedAt: string;
   fileUrl: string;
-}
-
-interface NotesResponse {
-  notes: Note | Note[];
-  pagination: {
-    total: number;
-    page: number;
-    totalPages: number;
-  };
-}
-
-interface QuizzesResponse {
-  quizzes: Quiz[];
-  pagination: {
-    total: number;
-    page: number;
-    totalPages: number;
-  };
 }
 
 const TopicDetail = () => {
@@ -101,64 +57,6 @@ const TopicDetail = () => {
   
   // State for edit topic dialog
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  
-  // Helper function to fetch notes
-  const fetchNotes = async (topicId: string): Promise<NotesResponse> => {
-    try {
-      const token = authService.getToken();
-      
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-      
-      const response = await fetch(`http://localhost:3000/api/notes/topic/${topicId}?page=1&limit=10`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch notes');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('[LOG topic_detail] ========= Error fetching notes:', error);
-      throw error;
-    }
-  };
-  
-  // Helper function to fetch quizzes
-  const fetchQuizzes = async (topicId: string): Promise<QuizzesResponse> => {
-    try {
-      const token = authService.getToken();
-      
-      if (!token) {
-        throw new Error('Authentication required');
-      }
-      
-      const response = await fetch(`http://localhost:3000/api/quizzes/topic/${topicId}?page=1&limit=10`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch quizzes');
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('[LOG topic_detail] ========= Error fetching quizzes:', error);
-      throw error;
-    }
-  };
   
   // Function to fetch all topic data - wrapped in useCallback to avoid dependency issues
   const fetchTopicData = useCallback(async () => {
@@ -189,19 +87,34 @@ const TopicDetail = () => {
       }
       
       // Fetch notes for the topic
-      const notesResponse = await fetchNotes(id as string);
-      const notesData = Array.isArray(notesResponse.notes) 
-        ? notesResponse.notes 
-        : notesResponse.notes ? [notesResponse.notes] : [];
-      setNotes(notesData);
+      try {
+        const notesResponse = await getNotesByTopic(id as string);
+        const notesData = Array.isArray(notesResponse.notes) 
+          ? notesResponse.notes 
+          : notesResponse.notes ? [notesResponse.notes] : [];
+        setNotes(notesData);
+      } catch (notesError) {
+        console.error('[LOG topic_detail] ========= Error fetching notes:', notesError);
+        setNotes([]);
+      }
       
       // Fetch quizzes for the topic
-      const quizzesResponse = await fetchQuizzes(id as string);
-      setQuizzes(quizzesResponse.quizzes || []);
+      try {
+        const quizzesResponse = await getQuizzesByTopic(id as string);
+        setQuizzes(quizzesResponse.quizzes || []);
+      } catch (quizzesError) {
+        console.error('[LOG topic_detail] ========= Error fetching quizzes:', quizzesError);
+        setQuizzes([]);
+      }
       
       // Fetch materials for the topic
-      const materialsData = await getMaterialsByTopic(id as string);
-      setMaterials(materialsData || []);
+      try {
+        const materialsData = await getMaterialsByTopic(id as string);
+        setMaterials(materialsData || []);
+      } catch (materialsError) {
+        console.error('[LOG topic_detail] ========= Error fetching materials:', materialsError);
+        setMaterials([]);
+      }
       
       // Set last studied and time spent (this would come from statistics in a real app)
       if (topicProgress && topicProgress.progress > 0) {
@@ -315,7 +228,7 @@ const TopicDetail = () => {
           </button>
           <button 
             className="py-2 px-4 bg-primaryColor text-white rounded-xl flex items-center gap-1"
-            onClick={() => router.push(`/assistance?topic=${encodeURIComponent(topic.title)}`)}
+            onClick={() => router.push(`/assistance?topic=${encodeURIComponent(topic.id)}`)}
           >
             <PiPlayCircle />
             <span>Study Now</span>

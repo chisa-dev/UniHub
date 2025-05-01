@@ -9,7 +9,7 @@ const getTopics = async (req, res) => {
   try {
     // Get total count
     const [countResult] = await sequelize.query(
-      'SELECT COUNT(*) as total FROM topics WHERE is_public = true OR creator_id = ?',
+      'SELECT COUNT(*) as total FROM topics WHERE is_public = true OR user_id = ?',
       {
         replacements: [req.user.id],
         type: sequelize.QueryTypes.SELECT,
@@ -20,8 +20,8 @@ const getTopics = async (req, res) => {
     const topics = await sequelize.query(
       `SELECT t.*, u.username as creator_name 
        FROM topics t 
-       LEFT JOIN users u ON t.creator_id = u.id 
-       WHERE t.is_public = true OR t.creator_id = ? 
+       LEFT JOIN users u ON t.user_id = u.id 
+       WHERE t.is_public = true OR t.user_id = ? 
        ORDER BY t.created_at DESC 
        LIMIT ? OFFSET ?`,
       {
@@ -52,8 +52,8 @@ const getTopic = async (req, res) => {
     const [topic] = await sequelize.query(
       `SELECT t.*, u.username as creator_name 
        FROM topics t 
-       LEFT JOIN users u ON t.creator_id = u.id 
-       WHERE t.id = ? AND (t.is_public = true OR t.creator_id = ?)`,
+       LEFT JOIN users u ON t.user_id = u.id 
+       WHERE t.id = ? AND (t.is_public = true OR t.user_id = ?)`,
       {
         replacements: [req.params.id, req.user.id],
         type: sequelize.QueryTypes.SELECT,
@@ -77,10 +77,20 @@ const createTopic = async (req, res) => {
   try {
     const topicId = uuidv4();
     await sequelize.query(
-      `INSERT INTO topics (id, title, description, creator_id, is_public) 
+      `INSERT INTO topics (id, title, description, user_id, is_public) 
        VALUES (?, ?, ?, ?, ?)`,
       {
         replacements: [topicId, title, description, req.user.id, isPublic],
+      }
+    );
+    
+    // Create initial progress record with 0%
+    const progressId = uuidv4();
+    await sequelize.query(
+      `INSERT INTO topic_progress (id, user_id, topic_id, progress, materials_count, last_activity) 
+       VALUES (?, ?, ?, 0, 0, CURRENT_TIMESTAMP)`,
+      {
+        replacements: [progressId, req.user.id, topicId],
       }
     );
 
@@ -89,7 +99,7 @@ const createTopic = async (req, res) => {
       topicId 
     });
   } catch (error) {
-    console.error('Error creating topic:', error);
+    console.error('[LOG topic] ========= Error creating topic:', error);
     res.status(500).json({ message: 'Error creating topic' });
   }
 };
@@ -120,7 +130,7 @@ const updateTopic = async (req, res) => {
     const [result] = await sequelize.query(
       `UPDATE topics 
        SET ${updates.join(', ')} 
-       WHERE id = ? AND creator_id = ?`,
+       WHERE id = ? AND user_id = ?`,
       {
         replacements: [...values, req.params.id, req.user.id],
       }
@@ -142,7 +152,7 @@ const updateTopic = async (req, res) => {
 const deleteTopic = async (req, res) => {
   try {
     const [result] = await sequelize.query(
-      'DELETE FROM topics WHERE id = ? AND creator_id = ?',
+      'DELETE FROM topics WHERE id = ? AND user_id = ?',
       {
         replacements: [req.params.id, req.user.id],
       }

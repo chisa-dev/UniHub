@@ -48,37 +48,39 @@ module.exports = (sequelize) => {
         min: 0
       }
     },
-    topicId: {
+    topic_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
       references: {
-        model: 'Topics',
+        model: 'topics',
         key: 'id'
       }
     },
-    createdBy: {
+    user_id: {
       type: DataTypes.STRING(36),
       allowNull: false,
       references: {
-        model: 'Users',
+        model: 'users',
         key: 'id'
       }
     }
   }, {
-    timestamps: true
+    tableName: 'quizzes',
+    timestamps: true,
+    underscored: true
   });
 
   Quiz.associate = (models) => {
     Quiz.belongsTo(models.Topic, {
-      foreignKey: 'topicId',
+      foreignKey: 'topic_id',
       as: 'topic'
     });
     Quiz.belongsTo(models.User, {
-      foreignKey: 'createdBy',
+      foreignKey: 'user_id',
       as: 'creator'
     });
     Quiz.hasMany(models.QuizAttempt, {
-      foreignKey: 'quizId',
+      foreignKey: 'quiz_id',
       as: 'attempts'
     });
   };

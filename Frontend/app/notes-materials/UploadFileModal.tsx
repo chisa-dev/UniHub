@@ -1,7 +1,9 @@
 import React, { useState, useRef, ChangeEvent } from 'react';
-import { PiX, PiUpload, PiFilePdf, PiFileDoc, PiFileCsv, PiImage } from 'react-icons/pi';
+import { PiX, PiUpload, PiFilePdf, PiFileDoc, PiFileCsv, PiImage, PiPlus } from 'react-icons/pi';
 import { uploadMaterial } from './materials.service';
 import { TopicProgress } from './statistics.service';
+import { topicsService } from '../topics/topicsService';
+import Alert from '@/components/ui/Alert';
 
 interface UploadFileModalProps {
   isOpen: boolean;
@@ -18,8 +20,12 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedTopicId, setSelectedTopicId] = useState<string>('');
+  const [isNewTopic, setIsNewTopic] = useState(false);
+  const [newTopicName, setNewTopicName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+  const [isCreatingTopic, setIsCreatingTopic] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -32,8 +38,45 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
   };
 
   const handleTopicChange = (e: ChangeEvent<HTMLSelectElement>) => {
-    setSelectedTopicId(e.target.value);
+    const value = e.target.value;
+    setSelectedTopicId(value);
+    setIsNewTopic(value === 'new');
     setError(null);
+  };
+
+  const handleNewTopicNameChange = (e: ChangeEvent<HTMLInputElement>) => {
+    setNewTopicName(e.target.value);
+    setError(null);
+  };
+
+  const createNewTopic = async (): Promise<string | null> => {
+    if (!newTopicName.trim()) {
+      setError('Please enter a topic name');
+      return null;
+    }
+
+    setIsCreatingTopic(true);
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      
+      if (!token) {
+        setError('You must be logged in to create topics');
+        return null;
+      }
+      
+      const response = await topicsService.createTopic({
+        title: newTopicName.trim(),
+        description: '',
+        isPublic: true
+      });
+      return response.topicId;
+    } catch (error) {
+      console.error('[LOG upload_modal] ========= Error creating topic:', error);
+      setError('Failed to create new topic. Please try again.');
+      return null;
+    } finally {
+      setIsCreatingTopic(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -42,7 +85,14 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
       return;
     }
 
-    if (!selectedTopicId) {
+    let topicId = selectedTopicId;
+    
+    // Create new topic if needed
+    if (isNewTopic) {
+      const newTopicId = await createNewTopic();
+      if (!newTopicId) return;
+      topicId = newTopicId;
+    } else if (!topicId) {
       setError('Please select a topic');
       return;
     }
@@ -60,9 +110,14 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
         return;
       }
       
-      await uploadMaterial(selectedFile, selectedTopicId);
+      await uploadMaterial(selectedFile, topicId);
       onUploadSuccess();
-      onClose();
+      setShowSuccessAlert(true);
+      
+      // Close the modal after a short delay to show the success state
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     } catch (error) {
       console.error('[LOG upload_modal] ========= Error uploading file:', error);
       setError('Failed to upload file. Please try again.');
@@ -108,13 +163,21 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
           </div>
         )}
 
+        {showSuccessAlert && (
+          <Alert
+            message="File uploaded successfully!"
+            type="success"
+            onClose={() => setShowSuccessAlert(false)}
+          />
+        )}
+
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1">Topic</label>
           <select
             value={selectedTopicId}
             onChange={handleTopicChange}
             className="w-full py-2 px-3 border border-primaryColor/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor bg-transparent"
-            disabled={isUploading}
+            disabled={isUploading || isCreatingTopic}
           >
             <option value="">Select a topic</option>
             {topics.map(topic => (
@@ -122,8 +185,23 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
                 {topic.topicTitle}
               </option>
             ))}
+            <option value="new">➕ Create new topic</option>
           </select>
         </div>
+
+        {isNewTopic && (
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">New Topic Name</label>
+            <input
+              type="text"
+              value={newTopicName}
+              onChange={handleNewTopicNameChange}
+              className="w-full py-2 px-3 border border-primaryColor/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-primaryColor bg-transparent"
+              placeholder="Enter topic name"
+              disabled={isUploading || isCreatingTopic}
+            />
+          </div>
+        )}
 
         <div className="mb-4">
           <div 
@@ -154,7 +232,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
               onChange={handleFileChange}
               className="hidden"
               accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.gif"
-              disabled={isUploading}
+              disabled={isUploading || isCreatingTopic}
             />
           </div>
         </div>
@@ -163,16 +241,21 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
           <button
             onClick={onClose}
             className="py-2 px-4 border border-primaryColor/30 text-primaryColor rounded-xl hover:bg-primaryColor/5"
-            disabled={isUploading}
+            disabled={isUploading || isCreatingTopic}
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             className="py-2 px-4 bg-primaryColor text-white rounded-xl flex items-center gap-1 disabled:opacity-50"
-            disabled={isUploading || !selectedFile || !selectedTopicId}
+            disabled={isUploading || isCreatingTopic || !selectedFile || (!selectedTopicId && !isNewTopic) || (isNewTopic && !newTopicName.trim())}
           >
-            {isUploading ? 'Uploading...' : 'Upload'}
+            {isUploading ? (
+              <>
+                <span className="inline-block h-4 w-4 mr-1 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                Uploading...
+              </>
+            ) : isCreatingTopic ? 'Creating Topic...' : 'Upload'}
           </button>
         </div>
       </div>

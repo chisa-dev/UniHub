@@ -1,4 +1,4 @@
-import API_ENDPOINTS from '@/config/apiConfig';
+import { API_ENDPOINTS } from '@/config/apiConfig';
 
 export interface Material {
   id: string;
@@ -18,10 +18,22 @@ export interface Material {
 
 export const getAllMaterials = async (): Promise<Material[]> => {
   try {
+    let token = '';
+    
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('token') || '';
+    }
+    
+    if (!token) {
+      throw new Error('Authentication required to fetch materials');
+    }
+    
     const response = await fetch(API_ENDPOINTS.MATERIALS.LIST, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 
@@ -38,10 +50,22 @@ export const getAllMaterials = async (): Promise<Material[]> => {
 
 export const getMaterialsByTopic = async (topicId: string): Promise<Material[]> => {
   try {
+    let token = '';
+    
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+      token = localStorage.getItem('token') || '';
+    }
+    
+    if (!token) {
+      throw new Error('Authentication required to fetch materials');
+    }
+    
     const response = await fetch(API_ENDPOINTS.MATERIALS.BY_TOPIC(topicId), {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
       },
     });
 

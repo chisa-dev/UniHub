@@ -139,11 +139,11 @@ Format the response as a JSON array of question objects.`;
     // Parse the response and store in database
     const questions = JSON.parse(response);
     const quiz = await Quiz.create({
-      topicId,
+      topic_id: topicId,
       title: `${topic.name} - ${difficulty} Quiz`,
       description: `Auto-generated ${difficulty} difficulty quiz for ${topic.name}`,
       questions: questions,
-      createdBy: req.user.id
+      user_id: req.user.id
     });
 
     res.json({

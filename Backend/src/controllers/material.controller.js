@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
+const { Op } = require('sequelize');
 
 // Set up storage for uploaded files
 const storage = multer.diskStorage({
@@ -64,6 +65,15 @@ exports.uploadMaterial = async (req, res) => {
         return res.status(400).json({ message: err.message });
       }
 
+      // Check if user is authenticated
+      if (!req.user) {
+        // Remove uploaded file if user is not authenticated
+        if (req.file) {
+          fs.unlinkSync(req.file.path);
+        }
+        return res.status(401).json({ message: 'Authentication required to upload materials' });
+      }
+
       // Check if file was uploaded
       if (!req.file) {
         return res.status(400).json({ message: 'No file uploaded' });
@@ -78,16 +88,23 @@ exports.uploadMaterial = async (req, res) => {
       }
 
       // Check if topic exists
-      const topic = await db.Topic.findByPk(topicId);
+      const topic = await db.Topic.findOne({
+        where: {
+          id: topicId,
+          user_id: req.user.id // Only allow uploading to topics owned by the user
+        }
+      });
+      
       if (!topic) {
-        // Remove uploaded file if topic doesn't exist
+        // Remove uploaded file if topic doesn't exist or user doesn't have access
         fs.unlinkSync(req.file.path);
-        return res.status(404).json({ message: 'Topic not found' });
+        return res.status(404).json({ message: 'Topic not found or you do not have permission to upload to this topic' });
       }
 
       // Create new material record
       const material = await db.Material.create({
         id: uuidv4(),
+        user_id: req.user.id, // Add user_id from authentication token
         topic_id: topicId,
         file_name: req.file.originalname,
         uploaded_file: req.file.filename,
@@ -118,11 +135,22 @@ exports.uploadMaterial = async (req, res) => {
 // Get all materials
 exports.getAllMaterials = async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required to access materials' });
+    }
+
     const materials = await db.Material.findAll({
+      where: { user_id: req.user.id }, // Filter by current user
       include: [{
         model: db.Topic,
         as: 'topic',
-        attributes: ['id', 'title']
+        attributes: ['id', 'title', 'user_id'],
+        include: [{
+          model: db.User,
+          as: 'creator',
+          attributes: ['id']
+        }]
       }]
     });
 
@@ -131,7 +159,8 @@ exports.getAllMaterials = async (req, res) => {
       const fileUrl = `${req.protocol}://${req.get('host')}/materials/${material.uploaded_file}`;
       return {
         ...material.toJSON(),
-        fileUrl
+        fileUrl,
+        user_id: material.topic?.user_id || null
       };
     });
 
@@ -148,16 +177,37 @@ exports.getAllMaterials = async (req, res) => {
 // Get materials by topic ID
 exports.getMaterialsByTopic = async (req, res) => {
   try {
-    const { topicId } = req.params;
-    
-    // Check if topic exists
-    const topic = await db.Topic.findByPk(topicId);
-    if (!topic) {
-      return res.status(404).json({ message: 'Topic not found' });
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required to access materials' });
     }
     
+    const { topicId } = req.params;
+    
+    // Check if topic exists and is accessible to the user
+    // Either it belongs to the current user or it's public
+    const topic = await db.Topic.findOne({
+      where: {
+        id: topicId,
+        [Op.or]: [
+          { user_id: req.user.id },
+          { is_public: true }
+        ]
+      }
+    });
+    
+    if (!topic) {
+      return res.status(404).json({ message: 'Topic not found or not accessible' });
+    }
+    
+    // If topic is public but not owned by the user, only show materials owned by the topic creator
+    // If topic is owned by the user, show their materials for this topic
+    const whereClause = topic.user_id === req.user.id
+      ? { topic_id: topicId, user_id: req.user.id }
+      : { topic_id: topicId, user_id: topic.user_id };
+    
     const materials = await db.Material.findAll({
-      where: { topic_id: topicId }
+      where: whereClause
     });
 
     // Add file URLs to each material
@@ -165,7 +215,8 @@ exports.getMaterialsByTopic = async (req, res) => {
       const fileUrl = `${req.protocol}://${req.get('host')}/materials/${material.uploaded_file}`;
       return {
         ...material.toJSON(),
-        fileUrl
+        fileUrl,
+        user_id: topic.user_id || null
       };
     });
 
@@ -182,13 +233,27 @@ exports.getMaterialsByTopic = async (req, res) => {
 // Get material by ID
 exports.getMaterialById = async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required to access materials' });
+    }
+    
     const { id } = req.params;
     
-    const material = await db.Material.findByPk(id, {
+    const material = await db.Material.findOne({
+      where: {
+        id: id,
+        user_id: req.user.id // Only return materials owned by the current user
+      },
       include: [{
         model: db.Topic,
         as: 'topic',
-        attributes: ['id', 'title']
+        attributes: ['id', 'title', 'user_id'],
+        include: [{
+          model: db.User,
+          as: 'creator',
+          attributes: ['id']
+        }]
       }]
     });
     
@@ -201,7 +266,8 @@ exports.getMaterialById = async (req, res) => {
     
     res.status(200).json({
       ...material.toJSON(),
-      fileUrl
+      fileUrl,
+      user_id: material.topic?.user_id || null
     });
   } catch (error) {
     console.error('[LOG get_material_by_id] ========= Error getting material:', error);
@@ -215,12 +281,22 @@ exports.getMaterialById = async (req, res) => {
 // Delete material by ID
 exports.deleteMaterial = async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required to delete materials' });
+    }
+    
     const { id } = req.params;
     
-    const material = await db.Material.findByPk(id);
+    const material = await db.Material.findOne({
+      where: {
+        id: id,
+        user_id: req.user.id
+      }
+    });
     
     if (!material) {
-      return res.status(404).json({ message: 'Material not found' });
+      return res.status(404).json({ message: 'Material not found or you do not have permission to delete it' });
     }
     
     // Delete file from storage
@@ -245,17 +321,31 @@ exports.deleteMaterial = async (req, res) => {
 // Delete all materials by topic ID
 exports.deleteMaterialsByTopic = async (req, res) => {
   try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res.status(401).json({ message: 'Authentication required to delete materials' });
+    }
+    
     const { topicId } = req.params;
     
-    // Check if topic exists
-    const topic = await db.Topic.findByPk(topicId);
+    // Check if topic exists and belongs to the current user
+    const topic = await db.Topic.findOne({
+      where: {
+        id: topicId,
+        user_id: req.user.id
+      }
+    });
+    
     if (!topic) {
-      return res.status(404).json({ message: 'Topic not found' });
+      return res.status(404).json({ message: 'Topic not found or you do not have permission to delete its materials' });
     }
     
     // Get all materials for the topic
     const materials = await db.Material.findAll({
-      where: { topic_id: topicId }
+      where: { 
+        topic_id: topicId,
+        user_id: req.user.id
+      }
     });
     
     // Delete files from storage
@@ -268,7 +358,10 @@ exports.deleteMaterialsByTopic = async (req, res) => {
     
     // Delete records from database
     await db.Material.destroy({
-      where: { topic_id: topicId }
+      where: { 
+        topic_id: topicId,
+        user_id: req.user.id
+      }
     });
     
     res.status(200).json({ 

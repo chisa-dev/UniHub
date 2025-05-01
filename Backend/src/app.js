@@ -13,7 +13,6 @@ const topicRoutes = require('./routes/topic.routes');
 const quizRoutes = require('./routes/quiz.routes');
 const noteRoutes = require('./routes/note.routes');
 const calendarRoutes = require('./routes/calendar.routes');
-const tutoringRoutes = require('./routes/tutoring.routes');
 const aiAssistantRoutes = require('./routes/ai-assistant.routes');
 const statusRoutes = require('./routes/status.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
@@ -52,14 +51,11 @@ const initializeDatabase = async () => {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
     
-    // In development, we'll use migrations instead of automatic sync
-    // to ensure proper table creation order
+    // In development, sync tables without dropping them
     if (process.env.NODE_ENV === 'development') {
-      console.log('Running in development mode - database tables will not be auto-synced');
-      console.log('Please run migrations manually if needed');
-      // Commenting out the sync to prevent foreign key errors
-      // await sequelize.sync();
-      // console.log('Database tables synced successfully.');
+      console.log('Running in development mode - syncing database tables');
+      await sequelize.sync();
+      console.log('Database tables synced successfully.');
     }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
@@ -118,7 +114,7 @@ app.use('/api/topics', topicRoutes);
 app.use('/api/quizzes', quizRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/calendar', calendarRoutes);
-app.use('/api/tutoring', tutoringRoutes);
+
 app.use('/api/ai-assistant', aiAssistantRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/materials', materialRoutes);

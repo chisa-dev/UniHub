@@ -23,7 +23,10 @@ const getEvents = async (req, res) => {
       replacements.push(type);
     }
 
-    const [events] = await sequelize.query(
+    console.log('[LOG calendar_get_events] ========= Query parameters:', { startDate, endDate, type });
+    console.log('[LOG calendar_get_events] ========= Where clause:', whereClause);
+
+    const events = await sequelize.query(
       `SELECT e.*, u.username as creator_name,
               GROUP_CONCAT(DISTINCT p.username) as participant_names,
               COUNT(DISTINCT ep.user_id) as participant_count
@@ -40,15 +43,17 @@ const getEvents = async (req, res) => {
       }
     );
 
-    // Parse participant names from GROUP_CONCAT
-    const formattedEvents = events.map(event => ({
+    console.log('[LOG calendar_get_events] ========= Found events:', events ? events.length : 0);
+
+    // Initialize as empty array if no events found
+    const formattedEvents = Array.isArray(events) ? events.map(event => ({
       ...event,
       participant_names: event.participant_names ? event.participant_names.split(',') : []
-    }));
+    })) : [];
 
     res.json(formattedEvents);
   } catch (error) {
-    console.error('Error fetching events:', error);
+    console.error('[LOG calendar_error] ========= Error fetching events:', error);
     res.status(500).json({ message: 'Error fetching events' });
   }
 };
@@ -93,6 +98,13 @@ const createEvent = async (req, res) => {
   try {
     const eventId = uuidv4();
     
+    // Format dates to MySQL compatible format (removing timezone info)
+    const formattedStartTime = startTime ? new Date(startTime).toISOString().slice(0, 19).replace('T', ' ') : null;
+    const formattedEndTime = endTime ? new Date(endTime).toISOString().slice(0, 19).replace('T', ' ') : null;
+    
+    console.log('[LOG calendar_create] ========= Input dates:', { startTime, endTime });
+    console.log('[LOG calendar_create] ========= Formatted dates:', { formattedStartTime, formattedEndTime });
+    
     // Create event
     await sequelize.query(
       `INSERT INTO calendar_events (
@@ -101,7 +113,7 @@ const createEvent = async (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       {
         replacements: [
-          eventId, title, description, startTime, endTime,
+          eventId, title, description, formattedStartTime, formattedEndTime,
           type, location, isOnline, meetingLink, req.user.id
         ],
       }
@@ -116,6 +128,7 @@ const createEvent = async (req, res) => {
       await sequelize.query(
         `INSERT INTO event_participants (id, event_id, user_id) VALUES ${participantValues}`
       );
+      console.log('[LOG calendar_create] ========= Added participants:', participants.length);
     }
 
     res.status(201).json({
@@ -123,7 +136,7 @@ const createEvent = async (req, res) => {
       eventId
     });
   } catch (error) {
-    console.error('Error creating event:', error);
+    console.error('[LOG calendar_error] ========= Error creating event:', error);
     res.status(500).json({ message: 'Error creating event' });
   }
 };
@@ -150,6 +163,13 @@ const updateEvent = async (req, res) => {
       });
     }
 
+    // Format dates to MySQL compatible format (removing timezone info)
+    const formattedStartTime = startTime ? new Date(startTime).toISOString().slice(0, 19).replace('T', ' ') : undefined;
+    const formattedEndTime = endTime ? new Date(endTime).toISOString().slice(0, 19).replace('T', ' ') : undefined;
+    
+    console.log('[LOG calendar_update] ========= Input dates:', { startTime, endTime });
+    console.log('[LOG calendar_update] ========= Formatted dates:', { formattedStartTime, formattedEndTime });
+
     // Update event details
     const updates = [];
     const values = [];
@@ -162,13 +182,13 @@ const updateEvent = async (req, res) => {
       updates.push('description = ?');
       values.push(description);
     }
-    if (startTime !== undefined) {
+    if (formattedStartTime !== undefined) {
       updates.push('start_time = ?');
-      values.push(startTime);
+      values.push(formattedStartTime);
     }
-    if (endTime !== undefined) {
+    if (formattedEndTime !== undefined) {
       updates.push('end_time = ?');
-      values.push(endTime);
+      values.push(formattedEndTime);
     }
     if (location !== undefined) {
       updates.push('location = ?');
@@ -218,7 +238,7 @@ const updateEvent = async (req, res) => {
 
     res.json({ message: 'Event updated successfully' });
   } catch (error) {
-    console.error('Error updating event:', error);
+    console.error('[LOG calendar_error] ========= Error updating event:', error);
     res.status(500).json({ message: 'Error updating event' });
   }
 };
@@ -240,7 +260,7 @@ const deleteEvent = async (req, res) => {
 
     res.json({ message: 'Event deleted successfully' });
   } catch (error) {
-    console.error('Error deleting event:', error);
+    console.error('[LOG calendar_error] ========= Error deleting event:', error);
     res.status(500).json({ message: 'Error deleting event' });
   }
 };

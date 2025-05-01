@@ -113,6 +113,8 @@ router.post('/upload', auth, materialController.uploadMaterial);
  *   get:
  *     summary: Get all materials by topic ID
  *     tags: [Materials]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: topicId
@@ -130,12 +132,14 @@ router.post('/upload', auth, materialController.uploadMaterial);
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Material'
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Topic not found
  *       500:
  *         description: Server error
  */
-router.get('/topic/:topicId', materialController.getMaterialsByTopic);
+router.get('/topic/:topicId', auth, materialController.getMaterialsByTopic);
 
 /**
  * @swagger
@@ -171,6 +175,8 @@ router.delete('/topic/:topicId', auth, materialController.deleteMaterialsByTopic
  *   get:
  *     summary: Get all materials
  *     tags: [Materials]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: List of all materials
@@ -180,10 +186,12 @@ router.delete('/topic/:topicId', auth, materialController.deleteMaterialsByTopic
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Material'
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
-router.get('/', materialController.getAllMaterials);
+router.get('/', auth, materialController.getAllMaterials);
 
 /**
  * @swagger
@@ -191,6 +199,8 @@ router.get('/', materialController.getAllMaterials);
  *   get:
  *     summary: Get material by ID
  *     tags: [Materials]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -206,12 +216,14 @@ router.get('/', materialController.getAllMaterials);
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Material'
+ *       401:
+ *         description: Unauthorized
  *       404:
  *         description: Material not found
  *       500:
  *         description: Server error
  */
-router.get('/:id', materialController.getMaterialById);
+router.get('/:id', auth, materialController.getMaterialById);
 
 /**
  * @swagger

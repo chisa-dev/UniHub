@@ -44,7 +44,7 @@ const getUserStatistics = async (req, res) => {
     });
     
     // Get note progress statistics
-    const [noteProgress] = await sequelize.query(`
+    const noteProgress = await sequelize.query(`
       SELECT np.*, n.title
       FROM note_progress np
       JOIN notes n ON np.note_id = n.id
@@ -109,7 +109,7 @@ const getUserStatistics = async (req, res) => {
       updatedAt: qp.updated_at
     }));
     
-    const formattedNoteProgress = noteProgress ? 
+    const formattedNoteProgress = noteProgress && Array.isArray(noteProgress) ? 
       noteProgress.map(np => ({
         noteId: np.note_id,
         noteTitle: np.title || 'Unknown Note',
@@ -149,7 +149,12 @@ const getUserStatistics = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching user statistics:', error);
+    console.error('[LOG statistics] ========= Error fetching user statistics:', error);
+    console.error('[LOG statistics] ========= Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     res.status(500).json({
       message: 'Error fetching user statistics',
       error: error.message
@@ -380,7 +385,7 @@ const updateNoteProgress = async (req, res) => {
       progress: noteProgress
     });
   } catch (error) {
-    console.error('Error updating note progress:', error);
+    console.error('[LOG statistics] ========= Error updating note progress:', error);
     res.status(500).json({
       message: 'Error updating note progress',
       error: error.message

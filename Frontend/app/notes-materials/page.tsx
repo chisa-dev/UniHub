@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   PiNote,
   PiFolderOpen,
@@ -18,6 +18,7 @@ import { getAllMaterials, getMaterialsByTopic, Material, deleteMaterial, deleteA
 import { formatFileSize, getFormattedDate, getFileIconComponent, getFileIconColorClass } from "./utils";
 import UploadFileModal from "./UploadFileModal";
 import ConfirmDialog from "./ConfirmDialog";
+import Alert from "@/components/ui/Alert";
 
 const NotesMaterials = () => {
   const [selectedFolder, setSelectedFolder] = useState("all");
@@ -39,14 +40,28 @@ const NotesMaterials = () => {
   const [topicToDeleteFrom, setTopicToDeleteFrom] = useState<TopicProgress | null>(null);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   
+  // Alert state
+  const [alert, setAlert] = useState<{message: string; type: 'success' | 'error'} | null>(null);
+  
+  // Extract fetching topics into a separate function
+  const fetchTopics = useCallback(async () => {
+    try {
+      // Fetch topics statistics
+      const statisticsData = await getStatistics();
+      setTopics(statisticsData.topics_progress);
+    } catch (error) {
+      console.error('[LOG notes_materials] ========= Error fetching topics:', error);
+      setError('Failed to load topics. Please try again later.');
+    }
+  }, []);
+  
   // Fetch topics and materials
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        // Fetch topics statistics
-        const statisticsData = await getStatistics();
-        setTopics(statisticsData.topics_progress);
+        // Fetch topics
+        await fetchTopics();
         
         // Fetch all materials initially
         const materialsData = await getAllMaterials();
@@ -60,7 +75,7 @@ const NotesMaterials = () => {
     };
     
     fetchData();
-  }, []);
+  }, [fetchTopics]);
   
   // Filter materials when folder selection changes
   useEffect(() => {
@@ -101,10 +116,19 @@ const NotesMaterials = () => {
       }
       
       // Refresh topic counts
-      const statisticsData = await getStatistics();
-      setTopics(statisticsData.topics_progress);
+      await fetchTopics();
+      
+      // Show success alert
+      setAlert({
+        message: "Materials updated successfully",
+        type: "success"
+      });
     } catch (error) {
       console.error('[LOG notes_materials] ========= Error refreshing data:', error);
+      setAlert({
+        message: "Failed to refresh materials",
+        type: "error"
+      });
     }
   };
   
@@ -131,9 +155,18 @@ const NotesMaterials = () => {
       // Close dialog and refresh data
       setIsDeleteMaterialDialogOpen(false);
       await handleRefreshData();
+      
+      // Show success alert
+      setAlert({
+        message: `"${materialToDelete.file_name}" deleted successfully`,
+        type: "success"
+      });
     } catch (error) {
       console.error('[LOG notes_materials] ========= Error deleting material:', error);
-      // You could add an error message here
+      setAlert({
+        message: "Failed to delete material",
+        type: "error"
+      });
     } finally {
       setIsDeleting(false);
       setMaterialToDelete(null);
@@ -151,9 +184,18 @@ const NotesMaterials = () => {
       // Close dialog and refresh data
       setIsDeleteAllMaterialsDialogOpen(false);
       await handleRefreshData();
+      
+      // Show success alert
+      setAlert({
+        message: `All materials in "${topicToDeleteFrom.topicTitle}" deleted successfully`,
+        type: "success"
+      });
     } catch (error) {
       console.error('[LOG notes_materials] ========= Error deleting all materials:', error);
-      // You could add an error message here
+      setAlert({
+        message: "Failed to delete materials",
+        type: "error"
+      });
     } finally {
       setIsDeletingAll(false);
       setTopicToDeleteFrom(null);
@@ -174,6 +216,14 @@ const NotesMaterials = () => {
 
   return (
     <div className="w-full max-w-[1070px] mx-auto">
+      {alert && (
+        <Alert
+          message={alert.message}
+          type={alert.type}
+          onClose={() => setAlert(null)}
+        />
+      )}
+      
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
           <PiNote className="text-primaryColor" />

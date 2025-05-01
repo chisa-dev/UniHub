@@ -19,6 +19,9 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
   const [showLanguageDropdown, setShowLanguageDropdown] = useState(false);
   const { currentLanguage, setLanguage } = useLanguageStore();
   const { t } = useTranslation();
+  
+  // Determine if we're on the assistance page to apply different styling
+  const isAssistancePage = path.includes("/assistance");
 
   const languages = [
     { id: "en", name: "English" },
@@ -36,7 +39,9 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
   };
 
   return (
-    <div className="px-6 py-3 flex justify-between items-center w-full sticky top-0 left-0 right-0 bg-white z-30 dark:bg-n0">
+    <div className={`px-6 py-3 flex justify-between items-center w-full sticky top-0 left-0 right-0 z-30 ${
+      isAssistancePage ? 'bg-transparent backdrop-blur-sm' : 'bg-white dark:bg-n0'
+    }`}>
       <div className="flex justify-start items-center gap-2">
         <button
           className={`${showSidebar ? "hidden" : ""}`}

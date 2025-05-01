@@ -24,7 +24,6 @@ Welcome to the technical documentation for UniHub - an Educational Platform desi
   - [Quizzes API](./backend/apis/quizzes-api.md)
   - [Notes API](./backend/apis/notes-api.md)
   - [Calendar API](./backend/apis/calendar-api.md)
-  - [Tutoring API](./backend/apis/tutoring-api.md)
   - [AI Assistant API](./backend/apis/ai-assistant-api.md)
 - [Middleware](./backend/middleware.md)
 - [Deployment](./backend/deployment.md)

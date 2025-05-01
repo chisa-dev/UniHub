@@ -15,7 +15,7 @@ module.exports = (sequelize) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    creator_id: {
+    user_id: {
       type: DataTypes.CHAR(36),
       references: {
         model: 'users',
@@ -35,7 +35,7 @@ module.exports = (sequelize) => {
 
   Topic.associate = (models) => {
     Topic.belongsTo(models.User, {
-      foreignKey: 'creator_id',
+      foreignKey: 'user_id',
       as: 'creator'
     });
   };

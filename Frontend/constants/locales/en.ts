@@ -5,7 +5,7 @@ export const en = {
     assistance: "Assistance",
     calendar: "Calendar",
     insights: "Insights",
-    testsQuizfetch: "Tests & QuizFetch",
+    testsQuizfetch: "Tests & Quiz",
     tutorMe: "Tutor Me",
     audioRecap: "Audio Recap",
     notesMaterials: "Notes and Materials",

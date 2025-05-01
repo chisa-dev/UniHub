@@ -122,7 +122,17 @@ router.post(
     body('type').isIn(['personal', 'tutoring', 'study_group']),
     body('location').optional().trim(),
     body('isOnline').optional().isBoolean(),
-    body('meetingLink').optional().trim().isURL(),
+    body('meetingLink').optional().custom(value => {
+      // Allow null/empty meeting links
+      if (value === null || value === '') {
+        return true;
+      }
+      // Otherwise validate as URL
+      if (!/^(https?:\/\/)/.test(value)) {
+        throw new Error('Meeting link must be a valid URL starting with http:// or https://');
+      }
+      return true;
+    }),
     body('participants').optional().isArray(),
     validate
   ],
@@ -185,7 +195,17 @@ router.put(
     body('endTime').optional().isISO8601(),
     body('location').optional().trim(),
     body('isOnline').optional().isBoolean(),
-    body('meetingLink').optional().trim().isURL(),
+    body('meetingLink').optional().custom(value => {
+      // Allow null/empty meeting links
+      if (value === null || value === '') {
+        return true;
+      }
+      // Otherwise validate as URL
+      if (!/^(https?:\/\/)/.test(value)) {
+        throw new Error('Meeting link must be a valid URL starting with http:// or https://');
+      }
+      return true;
+    }),
     body('participants').optional().isArray(),
     validate
   ],

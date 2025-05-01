@@ -7,6 +7,15 @@ module.exports = (sequelize) => {
       defaultValue: DataTypes.UUIDV4,
       primaryKey: true
     },
+    user_id: {
+      type: DataTypes.CHAR(36),
+      allowNull: false,
+      references: {
+        model: 'users',
+        key: 'id'
+      },
+      onDelete: 'CASCADE'
+    },
     topic_id: {
       type: DataTypes.CHAR(36),
       allowNull: false,
@@ -42,6 +51,10 @@ module.exports = (sequelize) => {
     Material.belongsTo(models.Topic, {
       foreignKey: 'topic_id',
       as: 'topic'
+    });
+    Material.belongsTo(models.User, {
+      foreignKey: 'user_id',
+      as: 'creator'
     });
   };
 

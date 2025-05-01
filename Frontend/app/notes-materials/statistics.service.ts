@@ -1,4 +1,4 @@
-import API_ENDPOINTS from '@/config/apiConfig';
+import { API_ENDPOINTS } from '@/config/apiConfig';
 
 export interface TopicProgress {
   topicId: string;

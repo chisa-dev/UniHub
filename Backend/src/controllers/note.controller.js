@@ -161,12 +161,22 @@ const createNote = async (req, res) => {
       }
     );
 
+    // Create initial progress record with 0%
+    const progressId = uuidv4();
+    await sequelize.query(
+      `INSERT INTO note_progress (id, user_id, note_id, progress, last_read_position) 
+       VALUES (?, ?, ?, 0, 0)`,
+      {
+        replacements: [progressId, req.user.id, noteId],
+      }
+    );
+
     res.status(201).json({
       message: 'Note created successfully',
       noteId
     });
   } catch (error) {
-    console.error('Error creating note:', error);
+    console.error('[LOG notes] ========= Error creating note:', error);
     res.status(500).json({ message: 'Error creating note' });
   }
 };

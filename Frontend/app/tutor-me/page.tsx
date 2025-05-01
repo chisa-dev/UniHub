@@ -55,7 +55,7 @@ const TutorMe = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
           <PiChalkboardTeacher className="text-primaryColor" />
-          Tutor Me
+          Tutor Me & Note Summerization
         </h1>
         <button className="bg-primaryColor text-white py-2 px-4 rounded-xl flex items-center gap-1">
           <PiCalendarPlus />

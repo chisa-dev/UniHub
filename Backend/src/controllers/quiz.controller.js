@@ -8,11 +8,11 @@ const getQuizzes = async (req, res) => {
   const { topicId } = req.query;
 
   try {
-    let whereClause = '';
-    const replacements = [];
+    let whereClause = 'WHERE q.user_id = ?';
+    const replacements = [req.user.id];
 
     if (topicId) {
-      whereClause = 'WHERE q.topic_id = ?';
+      whereClause += ' AND q.topic_id = ?';
       replacements.push(topicId);
     }
 
@@ -26,14 +26,14 @@ const getQuizzes = async (req, res) => {
     );
 
     // Get quizzes
-    const [quizzes] = await sequelize.query(
+    const quizzes = await sequelize.query(
       `SELECT q.*, t.title as topic_title, 
               u.username as creator_name,
               COUNT(DISTINCT qq.id) as question_count,
               COUNT(DISTINCT qa.id) as attempt_count
        FROM quizzes q
        LEFT JOIN topics t ON q.topic_id = t.id
-       LEFT JOIN users u ON q.creator_id = u.id
+       LEFT JOIN users u ON q.user_id = u.id
        LEFT JOIN quiz_questions qq ON q.id = qq.quiz_id
        LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id
        ${whereClause}
@@ -55,7 +55,7 @@ const getQuizzes = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching quizzes:', error);
+    console.error('[LOG quiz] ========= Error fetching quizzes:', error);
     res.status(500).json({ message: 'Error fetching quizzes' });
   }
 };
@@ -67,7 +67,7 @@ const getQuiz = async (req, res) => {
       `SELECT q.*, t.title as topic_title, u.username as creator_name
        FROM quizzes q
        LEFT JOIN topics t ON q.topic_id = t.id
-       LEFT JOIN users u ON q.creator_id = u.id
+       LEFT JOIN users u ON q.user_id = u.id
        WHERE q.id = ?`,
       {
         replacements: [req.params.id],
@@ -163,9 +163,9 @@ const getQuizzesByTopic = async (req, res) => {
 
     // Get total count
     const [countResult] = await sequelize.query(
-      'SELECT COUNT(*) as total FROM quizzes q WHERE q.topic_id = ?',
+      'SELECT COUNT(*) as total FROM quizzes q WHERE q.topic_id = ? AND q.user_id = ?',
       {
-        replacements: [topicId],
+        replacements: [topicId, req.user.id],
         type: sequelize.QueryTypes.SELECT,
       }
     );
@@ -178,15 +178,15 @@ const getQuizzesByTopic = async (req, res) => {
               COUNT(DISTINCT qa.id) as attempt_count
        FROM quizzes q
        LEFT JOIN topics t ON q.topic_id = t.id
-       LEFT JOIN users u ON q.creator_id = u.id
+       LEFT JOIN users u ON q.user_id = u.id
        LEFT JOIN quiz_questions qq ON q.id = qq.quiz_id
        LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id
-       WHERE q.topic_id = ?
+       WHERE q.topic_id = ? AND q.user_id = ?
        GROUP BY q.id
        ORDER BY q.created_at DESC
        LIMIT ? OFFSET ?`,
       {
-        replacements: [topicId, limit, offset],
+        replacements: [topicId, req.user.id, limit, offset],
         type: sequelize.QueryTypes.SELECT,
       }
     );
@@ -213,7 +213,7 @@ const createQuiz = async (req, res) => {
     
     // Create quiz
     await sequelize.query(
-      `INSERT INTO quizzes (id, title, description, topic_id, creator_id, is_ai_generated) 
+      `INSERT INTO quizzes (id, title, description, topic_id, user_id, is_ai_generated) 
        VALUES (?, ?, ?, ?, ?, ?)`,
       {
         replacements: [quizId, title, description, topicId, req.user.id, isAiGenerated],
@@ -270,12 +270,22 @@ const createQuiz = async (req, res) => {
       }
     }
 
+    // Create initial progress record with 0%
+    const progressId = uuidv4();
+    await sequelize.query(
+      `INSERT INTO quiz_progress (id, user_id, quiz_id, progress, best_score, attempts_count, last_attempt_date) 
+       VALUES (?, ?, ?, 0, NULL, 0, NULL)`,
+      {
+        replacements: [progressId, req.user.id, quizId],
+      }
+    );
+
     res.status(201).json({
       message: 'Quiz created successfully',
       quizId
     });
   } catch (error) {
-    console.error('Error creating quiz:', error);
+    console.error('[LOG quiz] ========= Error creating quiz:', error);
     res.status(500).json({ message: 'Error creating quiz' });
   }
 };

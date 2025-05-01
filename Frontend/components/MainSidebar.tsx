@@ -122,7 +122,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
       icon: <PiChartLine size={20} className="text-primaryColor" /> 
     },
     { 
-      path: "/tests-quizfetch", 
+      path: "/quizzes", 
       name: t('sidebar.testsQuizfetch'), 
       icon: <PiExam size={20} className="text-primaryColor" /> 
     },
@@ -185,16 +185,16 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
               </span>
               <div className="flex items-center gap-2">
                 {isClient && (
-                  <button 
+                  <span 
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowAddTopicModal(true);
                     }}
-                    className="p-1 hover:bg-primaryColor/20 rounded-full"
+                    className="p-1 hover:bg-primaryColor/20 rounded-full cursor-pointer"
                     title="Add new topic"
                   >
                     <PiPlus size={16} className="text-primaryColor" />
-                  </button>
+                  </span>
                 )}
                 {showTopics ? (
                   <PiCaretUp className="text-primaryColor" />
@@ -232,13 +232,13 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                       {topic.title}
                     </Link>
                     {isClient && (
-                      <button
+                      <span
                         onClick={(e) => handleDeleteClick(e, topic)}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-errorColor/10 text-errorColor transition-opacity"
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-errorColor/10 text-errorColor transition-opacity cursor-pointer"
                         title="Delete topic"
                       >
                         <PiTrash size={14} />
-                      </button>
+                      </span>
                     )}
                   </div>
                 ))
