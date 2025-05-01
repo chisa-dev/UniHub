@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   PiAlignLeft,
   PiBookOpen,
@@ -14,132 +14,308 @@ import {
   PiPencilLine,
   PiExport
 } from "react-icons/pi";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
+import { Topic, topicsService } from "../topicsService";
+import { getStatistics, TopicProgress } from "@/app/notes-materials/statistics.service";
+import { authService } from "@/app/auth/authService";
+import { getMaterialsByTopic } from "@/app/notes-materials/materials.service";
+import EditTopicDialog from "@/components/modals/EditTopicDialog";
+
+// Define interfaces for the API data
+interface Note {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+  topic_id: string;
+  is_private: number;
+  topic_title: string;
+  creator_name: string;
+}
+
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  topic_id: string;
+  creator_id: string;
+  is_public: number;
+  is_ai_generated: number;
+  created_at: string;
+  updated_at: string;
+  topic_title: string;
+  creator_name: string;
+  question_count: number;
+  attempt_count: number;
+}
+
+interface Material {
+  id: string;
+  topic_id: string;
+  file_name: string;
+  uploaded_file: string;
+  file_type: 'pdf' | 'image' | 'ppt' | 'docx';
+  file_size: number;
+  createdAt: string;
+  updatedAt: string;
+  fileUrl: string;
+}
+
+interface NotesResponse {
+  notes: Note | Note[];
+  pagination: {
+    total: number;
+    page: number;
+    totalPages: number;
+  };
+}
+
+interface QuizzesResponse {
+  quizzes: Quiz[];
+  pagination: {
+    total: number;
+    page: number;
+    totalPages: number;
+  };
+}
 
 const TopicDetail = () => {
   const params = useParams();
+  const router = useRouter();
   const { id } = params;
   const [activeTab, setActiveTab] = useState("notes");
   
-  // Mock data for topics
-  const topicData = {
-    "topic1": {
-      title: "Mathematics 101",
-      description: "Comprehensive notes and materials for introductory mathematics, covering algebra, geometry, and calculus basics.",
-      progress: 65,
-      starred: true,
-      lastStudied: "May 10, 2023",
-      timeSpent: "15h 20m",
-      notes: [
-        { id: 1, title: "Algebra Fundamentals", pages: 5, lastEdited: "May 8, 2023" },
-        { id: 2, title: "Geometry Basics", pages: 3, lastEdited: "May 5, 2023" },
-        { id: 3, title: "Introduction to Calculus", pages: 7, lastEdited: "May 2, 2023" }
-      ],
-      quizzes: [
-        { id: 1, title: "Algebra Quiz 1", questions: 10, score: 85, date: "May 7, 2023" },
-        { id: 2, title: "Geometry Quiz", questions: 8, score: 75, date: "May 4, 2023" }
-      ],
-      materials: [
-        { id: 1, title: "Math Formula Sheet", type: "pdf", size: "1.2 MB" },
-        { id: 2, title: "Calculus Cheat Sheet", type: "docx", size: "850 KB" },
-        { id: 3, title: "Geometry Diagrams", type: "png", size: "3.5 MB" }
-      ]
-    },
-    "topic2": {
-      title: "Computer Science Basics",
-      description: "Introduction to programming concepts, algorithms, and data structures for beginners.",
-      progress: 45,
-      starred: false,
-      lastStudied: "May 9, 2023",
-      timeSpent: "10h 45m",
-      notes: [
-        { id: 1, title: "Programming Fundamentals", pages: 8, lastEdited: "May 7, 2023" },
-        { id: 2, title: "Data Structures", pages: 6, lastEdited: "May 4, 2023" },
-        { id: 3, title: "Algorithms Basics", pages: 5, lastEdited: "May 1, 2023" }
-      ],
-      quizzes: [
-        { id: 1, title: "Programming Concepts Quiz", questions: 12, score: 90, date: "May 8, 2023" },
-        { id: 2, title: "Data Structures Quiz", questions: 10, score: 80, date: "May 3, 2023" }
-      ],
-      materials: [
-        { id: 1, title: "Python Cheat Sheet", type: "pdf", size: "1.5 MB" },
-        { id: 2, title: "Algorithm Flowcharts", type: "png", size: "2.8 MB" },
-        { id: 3, title: "Data Structures Diagrams", type: "pdf", size: "3.2 MB" }
-      ]
-    },
-    "topic3": {
-      title: "History of Art",
-      description: "Survey of art history from prehistoric times to contemporary movements, including major artists and their works.",
-      progress: 30,
-      starred: true,
-      lastStudied: "May 7, 2023",
-      timeSpent: "8h 15m",
-      notes: [
-        { id: 1, title: "Renaissance Art", pages: 10, lastEdited: "May 6, 2023" },
-        { id: 2, title: "Impressionism", pages: 7, lastEdited: "May 3, 2023" },
-        { id: 3, title: "Modern Art Movements", pages: 9, lastEdited: "April 30, 2023" }
-      ],
-      quizzes: [
-        { id: 1, title: "Renaissance Artists Quiz", questions: 15, score: 88, date: "May 5, 2023" },
-        { id: 2, title: "Art Movements Timeline Quiz", questions: 12, score: 92, date: "May 2, 2023" }
-      ],
-      materials: [
-        { id: 1, title: "Famous Paintings Collection", type: "pdf", size: "8.5 MB" },
-        { id: 2, title: "Art History Timeline", type: "pdf", size: "2.1 MB" },
-        { id: 3, title: "Artist Biographies", type: "docx", size: "1.9 MB" }
-      ]
-    },
-    "topic4": {
-      title: "Physics Fundamentals",
-      description: "Study materials for basic physics concepts including mechanics, thermodynamics, and electromagnetism.",
-      progress: 55,
-      starred: false,
-      lastStudied: "May 11, 2023",
-      timeSpent: "12h 40m",
-      notes: [
-        { id: 1, title: "Mechanics Principles", pages: 12, lastEdited: "May 9, 2023" },
-        { id: 2, title: "Thermodynamics Basics", pages: 8, lastEdited: "May 6, 2023" },
-        { id: 3, title: "Electromagnetism Notes", pages: 10, lastEdited: "May 3, 2023" }
-      ],
-      quizzes: [
-        { id: 1, title: "Mechanics Quiz", questions: 15, score: 78, date: "May 8, 2023" },
-        { id: 2, title: "Thermodynamics Quiz", questions: 10, score: 85, date: "May 5, 2023" }
-      ],
-      materials: [
-        { id: 1, title: "Physics Formula Sheet", type: "pdf", size: "1.7 MB" },
-        { id: 2, title: "Physics Problem Solutions", type: "docx", size: "2.3 MB" },
-        { id: 3, title: "Experiment Diagrams", type: "png", size: "4.2 MB" }
-      ]
+  // State for API data
+  const [topic, setTopic] = useState<Topic | null>(null);
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [isStarred, setIsStarred] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastStudied, setLastStudied] = useState<string>("Not studied yet");
+  const [timeSpent, setTimeSpent] = useState<string>("0h 0m");
+  
+  // State for edit topic dialog
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  
+  // Helper function to fetch notes
+  const fetchNotes = async (topicId: string): Promise<NotesResponse> => {
+    try {
+      const token = authService.getToken();
+      
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await fetch(`http://localhost:3000/api/notes/topic/${topicId}?page=1&limit=10`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch notes');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('[LOG topic_detail] ========= Error fetching notes:', error);
+      throw error;
     }
   };
   
-  // Get the current topic data
-  const currentTopic = topicData[id as keyof typeof topicData] || topicData.topic1;
+  // Helper function to fetch quizzes
+  const fetchQuizzes = async (topicId: string): Promise<QuizzesResponse> => {
+    try {
+      const token = authService.getToken();
+      
+      if (!token) {
+        throw new Error('Authentication required');
+      }
+      
+      const response = await fetch(`http://localhost:3000/api/quizzes/topic/${topicId}?page=1&limit=10`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch quizzes');
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('[LOG topic_detail] ========= Error fetching quizzes:', error);
+      throw error;
+    }
+  };
   
-  // Toggle star status
-  const [isStarred, setIsStarred] = useState(currentTopic.starred);
+  // Function to fetch all topic data - wrapped in useCallback to avoid dependency issues
+  const fetchTopicData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      
+      // Check if user is authenticated
+      const token = authService.getToken();
+      if (!token) {
+        router.push('/auth/login');
+        return;
+      }
+      
+      // Fetch topic details
+      const topicData = await topicsService.getTopic(id as string);
+      setTopic(topicData);
+      
+      // Fetch topic statistics to get progress
+      const statisticsData = await getStatistics();
+      const topicProgress = statisticsData.topics_progress.find(
+        (t: TopicProgress) => t.topicId === id
+      );
+      
+      if (topicProgress) {
+        setProgress(topicProgress.progress);
+        // We don't have starred info in the API, could be implemented later
+        setIsStarred(false);
+      }
+      
+      // Fetch notes for the topic
+      const notesResponse = await fetchNotes(id as string);
+      const notesData = Array.isArray(notesResponse.notes) 
+        ? notesResponse.notes 
+        : notesResponse.notes ? [notesResponse.notes] : [];
+      setNotes(notesData);
+      
+      // Fetch quizzes for the topic
+      const quizzesResponse = await fetchQuizzes(id as string);
+      setQuizzes(quizzesResponse.quizzes || []);
+      
+      // Fetch materials for the topic
+      const materialsData = await getMaterialsByTopic(id as string);
+      setMaterials(materialsData || []);
+      
+      // Set last studied and time spent (this would come from statistics in a real app)
+      if (topicProgress && topicProgress.progress > 0) {
+        setLastStudied(new Date().toLocaleDateString());
+        setTimeSpent(`${Math.floor(Math.random() * 10)}h ${Math.floor(Math.random() * 60)}m`);
+      }
+      
+    } catch (error: any) {
+      console.error('[LOG topic_detail] ========= Error fetching topic data:', error);
+      setError(error.message || 'Failed to load topic data');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id, router]);
+  
+  // Fetch data on component mount or when id changes
+  useEffect(() => {
+    fetchTopicData();
+  }, [fetchTopicData]);
+  
+  // Format date for display
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+  
+  // Format file size for display
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+  
+  // Handle opening the edit topic dialog
+  const handleOpenEditDialog = () => {
+    setIsEditDialogOpen(true);
+  };
+  
+  // Handle closing the edit topic dialog
+  const handleCloseEditDialog = () => {
+    setIsEditDialogOpen(false);
+  };
+  
+  // Handle topic updated
+  const handleTopicUpdated = () => {
+    // Refetch topic data after update
+    fetchTopicData();
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="container py-8 flex justify-center items-center min-h-[400px]">
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-primaryColor border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p>Loading topic data...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error || !topic) {
+    return (
+      <div className="container py-8">
+        <div className="bg-errorColor/10 text-errorColor p-4 rounded-xl">
+          <h2 className="font-semibold mb-2">Error</h2>
+          <p>{error || 'Failed to load topic data'}</p>
+          <button 
+            className="mt-4 px-4 py-2 bg-primaryColor text-white rounded-xl"
+            onClick={() => router.push('/topics')}
+          >
+            Go Back to Topics
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="container py-8">
+      {/* Edit Topic Dialog */}
+      {topic && (
+        <EditTopicDialog
+          topic={topic}
+          isOpen={isEditDialogOpen}
+          onClose={handleCloseEditDialog}
+          onTopicUpdated={handleTopicUpdated}
+        />
+      )}
+      
       <div className="flex justify-between items-start mb-6">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <PiAlignLeft className="text-primaryColor" />
             <span className="text-sm text-n300 dark:text-n400">Topics / </span>
-            <span className="text-sm">{currentTopic.title}</span>
+            <span className="text-sm">{topic.title}</span>
           </div>
-          <h1 className="text-2xl font-semibold">{currentTopic.title}</h1>
-          <p className="text-n300 dark:text-n400 mt-1">{currentTopic.description}</p>
+          <h1 className="text-2xl font-semibold">{topic.title}</h1>
+          <p className="text-n300 dark:text-n400 mt-1">{topic.description}</p>
         </div>
         
         <div className="flex flex-col sm:flex-row gap-2">
-          <button className="py-2 px-4 border border-primaryColor/30 text-primaryColor rounded-xl hover:bg-primaryColor/5 flex items-center gap-1">
+          <button 
+            className="py-2 px-4 border border-primaryColor/30 text-primaryColor rounded-xl hover:bg-primaryColor/5 flex items-center gap-1"
+            onClick={handleOpenEditDialog}
+          >
             <PiPencilLine />
             <span>Edit Topic</span>
           </button>
           <button 
             className="py-2 px-4 bg-primaryColor text-white rounded-xl flex items-center gap-1"
-            onClick={() => window.location.href = `/assistance?topic=${encodeURIComponent(currentTopic.title)}`}
+            onClick={() => router.push(`/assistance?topic=${encodeURIComponent(topic.title)}`)}
           >
             <PiPlayCircle />
             <span>Study Now</span>
@@ -155,7 +331,7 @@ const TopicDetail = () => {
               <div className="flex items-center gap-2">
                 <h3 className="font-medium">Progress</h3>
                 <span className="text-sm text-n300 dark:text-n400">
-                  {currentTopic.progress}% Complete
+                  {progress}% Complete
                 </span>
               </div>
               <button onClick={() => setIsStarred(!isStarred)}>
@@ -169,7 +345,7 @@ const TopicDetail = () => {
             <div className="w-full bg-n300/20 rounded-full h-2 mb-4">
               <div 
                 className="bg-primaryColor h-2 rounded-full" 
-                style={{ width: `${currentTopic.progress}%` }}
+                style={{ width: `${progress}%` }}
               ></div>
             </div>
             
@@ -212,34 +388,44 @@ const TopicDetail = () => {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">My Notes</h3>
-                  <button className="text-xs bg-primaryColor text-white py-1 px-3 rounded-lg flex items-center gap-1">
+                  <button 
+                    className="text-xs bg-primaryColor text-white py-1 px-3 rounded-lg flex items-center gap-1"
+                    onClick={() => router.push(`/notes-materials?topicId=${id}`)}
+                  >
                     <PiPencilLine />
                     <span>New Note</span>
                   </button>
                 </div>
                 
                 <div className="space-y-3">
-                  {currentTopic.notes.map((note) => (
-                    <div 
-                      key={note.id} 
-                      className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primaryColor/10 rounded-lg">
-                          <PiFileText className="text-primaryColor" />
+                  {notes.length > 0 ? (
+                    notes.map((note) => (
+                      <div 
+                        key={note.id} 
+                        className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group cursor-pointer"
+                        onClick={() => router.push(`/notes-materials?noteId=${note.id}`)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primaryColor/10 rounded-lg">
+                            <PiFileText className="text-primaryColor" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm">{note.title}</h4>
+                            <p className="text-xs text-n300 dark:text-n400">
+                              Last edited: {formatDate(note.updated_at)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-medium text-sm">{note.title}</h4>
-                          <p className="text-xs text-n300 dark:text-n400">
-                            {note.pages} pages • Last edited: {note.lastEdited}
-                          </p>
-                        </div>
+                        <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
+                          <PiCaretRight className="text-primaryColor" />
+                        </button>
                       </div>
-                      <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
-                        <PiCaretRight className="text-primaryColor" />
-                      </button>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 border border-dashed border-primaryColor/20 rounded-lg">
+                      <p className="text-n300 dark:text-n400">No notes yet. Create your first note!</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -249,45 +435,51 @@ const TopicDetail = () => {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">My Quizzes</h3>
-                  <button className="text-xs bg-primaryColor text-white py-1 px-3 rounded-lg flex items-center gap-1">
+                  <button 
+                    className="text-xs bg-primaryColor text-white py-1 px-3 rounded-lg flex items-center gap-1"
+                    onClick={() => router.push(`/quizzes/create?topicId=${id}`)}
+                  >
                     <PiListChecks />
                     <span>New Quiz</span>
                   </button>
                 </div>
                 
                 <div className="space-y-3">
-                  {currentTopic.quizzes.map((quiz) => (
-                    <div 
-                      key={quiz.id}
-                      className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primaryColor/10 rounded-lg">
-                          <PiListChecks className="text-primaryColor" />
+                  {quizzes.length > 0 ? (
+                    quizzes.map((quiz) => (
+                      <div 
+                        key={quiz.id}
+                        className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group cursor-pointer"
+                        onClick={() => router.push(`/quizzes/${quiz.id}`)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primaryColor/10 rounded-lg">
+                            <PiListChecks className="text-primaryColor" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm">{quiz.title}</h4>
+                            <p className="text-xs text-n300 dark:text-n400">
+                              {quiz.question_count} questions • Created: {formatDate(quiz.created_at)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-medium text-sm">{quiz.title}</h4>
-                          <p className="text-xs text-n300 dark:text-n400">
-                            {quiz.questions} questions • Completed: {quiz.date}
-                          </p>
+                        <div className="flex items-center gap-2">
+                          {quiz.attempt_count > 0 && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-successColor/10 text-successColor">
+                              Attempted
+                            </span>
+                          )}
+                          <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
+                            <PiCaretRight className="text-primaryColor" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          quiz.score >= 80 
-                            ? "bg-successColor/10 text-successColor" 
-                            : quiz.score >= 60 
-                              ? "bg-warningColor/10 text-warningColor"
-                              : "bg-errorColor/10 text-errorColor"
-                        }`}>
-                          {quiz.score}%
-                        </span>
-                        <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
-                          <PiCaretRight className="text-primaryColor" />
-                        </button>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 border border-dashed border-primaryColor/20 rounded-lg">
+                      <p className="text-n300 dark:text-n400">No quizzes yet. Create your first quiz!</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -297,39 +489,53 @@ const TopicDetail = () => {
               <div>
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">Study Materials</h3>
-                  <button className="text-xs bg-primaryColor text-white py-1 px-3 rounded-lg flex items-center gap-1">
+                  <button 
+                    className="text-xs bg-primaryColor text-white py-1 px-3 rounded-lg flex items-center gap-1"
+                    onClick={() => router.push(`/notes-materials?topicId=${id}&tab=materials`)}
+                  >
                     <PiExport />
                     <span>Add Material</span>
                   </button>
                 </div>
                 
                 <div className="space-y-3">
-                  {currentTopic.materials.map((material) => (
-                    <div 
-                      key={material.id}
-                      className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primaryColor/10 rounded-lg">
-                          <PiBookOpen className="text-primaryColor" />
+                  {materials.length > 0 ? (
+                    materials.map((material) => (
+                      <div 
+                        key={material.id}
+                        className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primaryColor/10 rounded-lg">
+                            <PiBookOpen className="text-primaryColor" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm">{material.file_name}</h4>
+                            <p className="text-xs text-n300 dark:text-n400">
+                              {material.file_type?.toUpperCase()} • {formatFileSize(material.file_size)}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-medium text-sm">{material.title}</h4>
-                          <p className="text-xs text-n300 dark:text-n400">
-                            {material.type.toUpperCase()} • {material.size}
-                          </p>
+                        <div className="flex items-center gap-2">
+                          <a 
+                            href={material.fileUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-xs text-primaryColor hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            Download
+                          </a>
+                          <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
+                            <PiCaretRight className="text-primaryColor" />
+                          </button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button className="text-xs text-primaryColor hover:underline opacity-0 group-hover:opacity-100 transition-opacity">
-                          Download
-                        </button>
-                        <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
-                          <PiCaretRight className="text-primaryColor" />
-                        </button>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 border border-dashed border-primaryColor/20 rounded-lg">
+                      <p className="text-n300 dark:text-n400">No materials yet. Add your first study material!</p>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             )}
@@ -342,23 +548,23 @@ const TopicDetail = () => {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-n300 dark:text-n400">Last Studied</span>
-                <span className="font-medium">{currentTopic.lastStudied}</span>
+                <span className="font-medium">{lastStudied}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-n300 dark:text-n400">Time Spent</span>
-                <span className="font-medium">{currentTopic.timeSpent}</span>
+                <span className="font-medium">{timeSpent}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-n300 dark:text-n400">Notes</span>
-                <span className="font-medium">{currentTopic.notes.length}</span>
+                <span className="font-medium">{notes.length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-n300 dark:text-n400">Quizzes</span>
-                <span className="font-medium">{currentTopic.quizzes.length}</span>
+                <span className="font-medium">{quizzes.length}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-n300 dark:text-n400">Materials</span>
-                <span className="font-medium">{currentTopic.materials.length}</span>
+                <span className="font-medium">{materials.length}</span>
               </div>
             </div>
             
@@ -370,7 +576,7 @@ const TopicDetail = () => {
               
               {/* Simple placeholder for a chart */}
               <div className="h-36 flex items-end gap-1">
-                {[40, 55, 60, 65, 65, 65, 65].map((height, idx) => (
+                {[40, 45, 50, 55, 60, 65, progress].map((height, idx) => (
                   <div 
                     key={idx}
                     className="flex-1 bg-primaryColor/20 rounded-t"
@@ -393,19 +599,21 @@ const TopicDetail = () => {
           <div className="bg-primaryColor/5 p-5 rounded-xl border border-primaryColor/20">
             <h3 className="font-medium mb-3">Recommended Actions</h3>
             <div className="space-y-2">
-              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40 text-left">
+              <button 
+                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40 text-left"
+                onClick={() => router.push(`/quizzes/create?topicId=${id}`)}
+              >
                 <PiListChecks className="text-primaryColor" />
                 <span className="text-sm">Take a practice quiz</span>
               </button>
+   
               
-              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40 text-left">
-                <PiPlayCircle className="text-primaryColor" />
-                <span className="text-sm">Create audio recap</span>
-              </button>
-              
-              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40 text-left">
+              <button 
+                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40 text-left"
+                onClick={() => router.push(`/notes-materials?topicId=${id}`)}
+              >
                 <PiFileText className="text-primaryColor" />
-                <span className="text-sm">Review latest notes</span>
+                <span className="text-sm">Create new notes</span>
               </button>
             </div>
           </div>

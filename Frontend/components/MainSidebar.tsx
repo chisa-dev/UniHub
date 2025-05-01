@@ -1,3 +1,4 @@
+"use client";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import fav from "@/public/images/favicon.png";
@@ -13,15 +14,19 @@ import {
   PiChartLine,
   PiExam,
   PiChalkboardTeacher,
-  PiSpeakerHigh,
   PiNote,
   PiGear,
   PiQuestion,
+  PiPlus,
+  PiTrash,
 } from "react-icons/pi";
 import Link from "next/link";
 import { useMainModal } from "@/stores/modal";
 import { usePathname } from "next/navigation";
 import { useTranslation } from "react-i18next";
+import { topicsService, Topic } from "@/app/topics/topicsService";
+import AddTopicModal from "./modals/AddTopic";
+import DeleteTopicDialog from "./modals/DeleteTopicDialog";
 
 type MainSidebarProps = {
   showSidebar: boolean;
@@ -32,25 +37,66 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const { modalOpen } = useMainModal();
   const pathname = usePathname();
   const [showTopics, setShowTopics] = useState(false);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
+  const [isClient, setIsClient] = useState(false);
   
-  // Mock data for started topics
-  const startedTopics = [
-    { id: "topic1", title: "Mathematics 101" },
-    { id: "topic2", title: "Computer Science Basics" },
-    { id: "topic3", title: "History of Art" },
-    { id: "topic4", title: "Physics Fundamentals" },
-  ];
+  // Modal states
+  const [showAddTopicModal, setShowAddTopicModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [topicToDelete, setTopicToDelete] = useState<{id: string, title: string} | null>(null);
   
+  // Set isClient to true once component mounts (client-side only)
   useEffect(() => {
+    setIsClient(true);
+    
+    // Set sidebar visibility based on screen size (client-side only)
     if (window.innerWidth > 992) {
       setShowSidebar(true);
     }
   }, [setShowSidebar]);
+  
+  // Fetch topics from the API
+  const fetchTopics = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await topicsService.getTopics();
+      setTopics(response.topics);
+    } catch (err) {
+      console.error("[LOG sidebar] ========= Error fetching topics:", err);
+      setError(err instanceof Error ? err.message : "Failed to load topics");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Fetch topics when component mounts on client side
+  useEffect(() => {
+    if (isClient) {
+      fetchTopics();
+    }
+  }, [isClient]);
 
   // Check if a link is active
   const isActive = (path: string) => {
     return pathname === path || pathname?.startsWith(path + '/');
+  };
+  
+  // Handle topic deletion click
+  const handleDeleteClick = (e: React.MouseEvent, topic: Topic) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setTopicToDelete({ id: topic.id, title: topic.title });
+    setShowDeleteDialog(true);
+  };
+  
+  // Handle topic deletion
+  const handleTopicDeleted = () => {
+    // Refresh the topics list
+    fetchTopics();
   };
 
   // Navigation items
@@ -84,11 +130,6 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
       path: "/tutor-me", 
       name: t('sidebar.tutorMe'), 
       icon: <PiChalkboardTeacher size={20} className="text-primaryColor" /> 
-    },
-    { 
-      path: "/audio-recap", 
-      name: t('sidebar.audioRecap'), 
-      icon: <PiSpeakerHigh size={20} className="text-primaryColor" /> 
     },
     { 
       path: "/notes-materials", 
@@ -142,26 +183,66 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                 <PiAlignLeft size={20} className="text-primaryColor" />
                 <span className="text-sm">{t('sidebar.startedTopics')}</span>
               </span>
-              {showTopics ? (
-                <PiCaretUp className="text-primaryColor" />
-              ) : (
-                <PiCaretDown className="text-primaryColor" />
-              )}
+              <div className="flex items-center gap-2">
+                {isClient && (
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowAddTopicModal(true);
+                    }}
+                    className="p-1 hover:bg-primaryColor/20 rounded-full"
+                    title="Add new topic"
+                  >
+                    <PiPlus size={16} className="text-primaryColor" />
+                  </button>
+                )}
+                {showTopics ? (
+                  <PiCaretUp className="text-primaryColor" />
+                ) : (
+                  <PiCaretDown className="text-primaryColor" />
+                )}
+              </div>
             </button>
             
             {/* Dropdown Content */}
             <div className={`overflow-hidden transition-all duration-300 ${showTopics ? 'max-h-60' : 'max-h-0'}`}>
-              {startedTopics.map((topic) => (
-                <Link
-                  key={topic.id}
-                  href={`/topics/${topic.id}`}
-                  className={`flex items-center gap-2 py-2.5 pl-12 pr-6 text-sm hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500 ${
-                    isActive(`/topics/${topic.id}`) ? 'bg-primaryColor/10 text-primaryColor' : ''
-                  }`}
+              {isLoading ? (
+                <div className="text-sm text-center py-2 pl-12 pr-6">Loading topics...</div>
+              ) : error ? (
+                <div className="text-sm text-center text-errorColor py-2 pl-12 pr-6">{error}</div>
+              ) : !isClient ? (
+                <div className="text-sm text-center py-2 pl-12 pr-6">Loading...</div>
+              ) : topics.length === 0 ? (
+                <button
+                  onClick={() => setShowAddTopicModal(true)}
+                  className="w-full flex items-center justify-center gap-2 py-3 text-sm bg-primaryColor/5 hover:bg-primaryColor/10 text-primaryColor rounded-xl my-2 mx-6"
                 >
-                  {topic.title}
-                </Link>
-              ))}
+                  <PiPlus size={16} />
+                  <span>Add Topic</span>
+                </button>
+              ) : (
+                topics.map((topic) => (
+                  <div key={topic.id} className="relative group">
+                    <Link
+                      href={`/topics/${topic.id}`}
+                      className={`flex items-center gap-2 py-2.5 pl-12 pr-6 text-sm hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500 ${
+                        isActive(`/topics/${topic.id}`) ? 'bg-primaryColor/10 text-primaryColor' : ''
+                      }`}
+                    >
+                      {topic.title}
+                    </Link>
+                    {isClient && (
+                      <button
+                        onClick={(e) => handleDeleteClick(e, topic)}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-errorColor/10 text-errorColor transition-opacity"
+                        title="Delete topic"
+                      >
+                        <PiTrash size={14} />
+                      </button>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </div>
           
@@ -217,6 +298,40 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
           </div>
         </div>
       </div>
+
+      {/* Only render modals on client side */}
+      {isClient && (
+        <>
+          {/* Add Topic Modal */}
+          {showAddTopicModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="bg-white dark:bg-n0 rounded-xl p-6 max-w-md w-full">
+                <AddTopicModal 
+                  onClose={() => setShowAddTopicModal(false)} 
+                  onTopicAdded={fetchTopics}
+                />
+              </div>
+            </div>
+          )}
+          
+          {/* Delete Topic Dialog */}
+          {showDeleteDialog && topicToDelete && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+              <div className="bg-white dark:bg-n0 rounded-xl max-w-sm w-full">
+                <DeleteTopicDialog
+                  topicId={topicToDelete.id}
+                  topicTitle={topicToDelete.title}
+                  onClose={() => {
+                    setShowDeleteDialog(false);
+                    setTopicToDelete(null);
+                  }}
+                  onDelete={handleTopicDeleted}
+                />
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

@@ -28,7 +28,7 @@ const getNotes = async (req, res) => {
     );
 
     // Get notes
-    const [notes] = await sequelize.query(
+    const notes = await sequelize.query(
       `SELECT n.*, t.title as topic_title, u.username as creator_name
        FROM notes n
        LEFT JOIN topics t ON n.topic_id = t.id
@@ -78,6 +78,73 @@ const getNote = async (req, res) => {
   } catch (error) {
     console.error('Error fetching note:', error);
     res.status(500).json({ message: 'Error fetching note' });
+  }
+};
+
+const getNotesByTopic = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+  const { topicId } = req.params;
+
+  try {
+    if (!topicId) {
+      return res.status(400).json({ message: 'Topic ID is required' });
+    }
+    
+    // Verify topic exists
+    const [topic] = await sequelize.query(
+      'SELECT id FROM topics WHERE id = ?',
+      {
+        replacements: [topicId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!topic) {
+      return res.status(404).json({ message: 'Topic not found' });
+    }
+
+    let whereClause = 'WHERE n.topic_id = ? AND (n.user_id = ? OR n.is_private = false)';
+    const replacements = [topicId, req.user.id];
+
+    // Get total count
+    const [countResult] = await sequelize.query(
+      `SELECT COUNT(*) as total 
+       FROM notes n 
+       ${whereClause}`,
+      {
+        replacements,
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    // Get notes
+    const notes = await sequelize.query(
+      `SELECT n.*, t.title as topic_title, u.username as creator_name
+       FROM notes n
+       LEFT JOIN topics t ON n.topic_id = t.id
+       LEFT JOIN users u ON n.user_id = u.id
+       ${whereClause}
+       ORDER BY n.created_at DESC
+       LIMIT ? OFFSET ?`,
+      {
+        replacements: [...replacements, limit, offset],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    res.json({
+      notes: notes[0],
+      pagination: {
+        total: countResult.total,
+        page,
+        totalPages: Math.ceil(countResult.total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching notes by topic:', error);
+    res.status(500).json({ message: 'Error fetching notes by topic' });
   }
 };
 
@@ -174,6 +241,7 @@ const deleteNote = async (req, res) => {
 module.exports = {
   getNotes,
   getNote,
+  getNotesByTopic,
   createNote,
   updateNote,
   deleteNote

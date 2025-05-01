@@ -14,6 +14,7 @@ import {
 
 const TutorMe = () => {
   const [selectedTopic, setSelectedTopic] = useState("");
+  const [sessionDuration, setSessionDuration] = useState("45 minutes");
   
   // Mock available topics
   const availableTopics = [
@@ -100,12 +101,16 @@ const TutorMe = () => {
                 
                 <div>
                   <label className="block text-sm font-medium mb-1">Session Duration</label>
-                  <select className="w-full py-2 px-4 rounded-xl border border-primaryColor/30 focus:outline-none focus:ring-2 focus:ring-primaryColor bg-transparent">
-                    <option>15 minutes</option>
-                    <option>30 minutes</option>
-                    <option selected>45 minutes</option>
-                    <option>60 minutes</option>
-                    <option>90 minutes</option>
+                  <select 
+                    value={sessionDuration}
+                    onChange={(e) => setSessionDuration(e.target.value)}
+                    className="w-full py-2 px-4 rounded-xl border border-primaryColor/30 focus:outline-none focus:ring-2 focus:ring-primaryColor bg-transparent"
+                  >
+                    <option value="15 minutes">15 minutes</option>
+                    <option value="30 minutes">30 minutes</option>
+                    <option value="45 minutes">45 minutes</option>
+                    <option value="60 minutes">60 minutes</option>
+                    <option value="90 minutes">90 minutes</option>
                   </select>
                 </div>
               </div>

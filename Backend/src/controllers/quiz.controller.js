@@ -33,7 +33,7 @@ const getQuizzes = async (req, res) => {
               COUNT(DISTINCT qa.id) as attempt_count
        FROM quizzes q
        LEFT JOIN topics t ON q.topic_id = t.id
-       LEFT JOIN users u ON q.created_by = u.id
+       LEFT JOIN users u ON q.creator_id = u.id
        LEFT JOIN quiz_questions qq ON q.id = qq.quiz_id
        LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id
        ${whereClause}
@@ -67,7 +67,7 @@ const getQuiz = async (req, res) => {
       `SELECT q.*, t.title as topic_title, u.username as creator_name
        FROM quizzes q
        LEFT JOIN topics t ON q.topic_id = t.id
-       LEFT JOIN users u ON q.created_by = u.id
+       LEFT JOIN users u ON q.creator_id = u.id
        WHERE q.id = ?`,
       {
         replacements: [req.params.id],
@@ -80,7 +80,7 @@ const getQuiz = async (req, res) => {
     }
 
     // Get questions
-    const [results] = await sequelize.query(
+    const questions = await sequelize.query(
       'SELECT * FROM quiz_questions WHERE quiz_id = ?',
       {
         replacements: [req.params.id],
@@ -88,27 +88,120 @@ const getQuiz = async (req, res) => {
       }
     );
 
-    const questions = Array.isArray(results) ? results : [results];
-
     if (!questions || questions.length === 0) {
       return res.status(404).json({ message: 'No questions found for this quiz' });
     }
 
-    // Don't send correct answers if user hasn't attempted the quiz yet
-    const sanitizedQuestions = questions.map(q => ({
-      id: q.id,
-      question: q.question,
-      options: q.options,
-      quiz_id: q.quiz_id
+    // Get options for each question
+    const questionsWithOptions = await Promise.all(questions.map(async (question) => {
+      try {
+        // Try to get options from quiz_question_options table
+        const options = await sequelize.query(
+          'SELECT option_text, is_correct FROM quiz_question_options WHERE question_id = ?',
+          {
+            replacements: [question.id],
+            type: sequelize.QueryTypes.SELECT,
+          }
+        );
+
+        // Return a sanitized question with options array
+        const sanitizedQuestion = {
+          id: question.id,
+          question: question.question,
+          questionType: question.question_type,
+          quiz_id: question.quiz_id,
+          options: options.map(opt => opt.option_text)
+        };
+
+        return sanitizedQuestion;
+      } catch (error) {
+        console.error('[LOG quiz] ========= Error fetching options:', error);
+        // If there's an error, just return the question without options
+        return {
+          id: question.id,
+          question: question.question,
+          questionType: question.question_type,
+          quiz_id: question.quiz_id,
+          options: []
+        };
+      }
     }));
 
     res.status(200).json({
       quiz,
-      questions: sanitizedQuestions
+      questions: questionsWithOptions
     });
   } catch (error) {
     console.error('Error fetching quiz:', error);
     res.status(500).json({ message: 'Error fetching quiz' });
+  }
+};
+
+const getQuizzesByTopic = async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+  const { topicId } = req.params;
+
+  try {
+    if (!topicId) {
+      return res.status(400).json({ message: 'Topic ID is required' });
+    }
+    
+    // Verify topic exists
+    const [topic] = await sequelize.query(
+      'SELECT id FROM topics WHERE id = ?',
+      {
+        replacements: [topicId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!topic) {
+      return res.status(404).json({ message: 'Topic not found' });
+    }
+
+    // Get total count
+    const [countResult] = await sequelize.query(
+      'SELECT COUNT(*) as total FROM quizzes q WHERE q.topic_id = ?',
+      {
+        replacements: [topicId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    // Get quizzes
+    const quizzes = await sequelize.query(
+      `SELECT q.*, t.title as topic_title, 
+              u.username as creator_name,
+              COUNT(DISTINCT qq.id) as question_count,
+              COUNT(DISTINCT qa.id) as attempt_count
+       FROM quizzes q
+       LEFT JOIN topics t ON q.topic_id = t.id
+       LEFT JOIN users u ON q.creator_id = u.id
+       LEFT JOIN quiz_questions qq ON q.id = qq.quiz_id
+       LEFT JOIN quiz_attempts qa ON q.id = qa.quiz_id
+       WHERE q.topic_id = ?
+       GROUP BY q.id
+       ORDER BY q.created_at DESC
+       LIMIT ? OFFSET ?`,
+      {
+        replacements: [topicId, limit, offset],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    res.json({
+      quizzes,
+      pagination: {
+        total: countResult.total,
+        page,
+        totalPages: Math.ceil(countResult.total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('[LOG quiz] ========= Error fetching quizzes by topic:', error);
+    res.status(500).json({ message: 'Error fetching quizzes by topic' });
   }
 };
 
@@ -120,7 +213,7 @@ const createQuiz = async (req, res) => {
     
     // Create quiz
     await sequelize.query(
-      `INSERT INTO quizzes (id, title, description, topic_id, created_by, is_ai_generated) 
+      `INSERT INTO quizzes (id, title, description, topic_id, creator_id, is_ai_generated) 
        VALUES (?, ?, ?, ?, ?, ?)`,
       {
         replacements: [quizId, title, description, topicId, req.user.id, isAiGenerated],
@@ -129,21 +222,52 @@ const createQuiz = async (req, res) => {
 
     // Create questions
     for (const q of questions) {
-      await sequelize.query(
-        `INSERT INTO quiz_questions (id, quiz_id, question, question_type, correct_answer, options, explanation) 
-         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        {
-          replacements: [
-            uuidv4(),
-            quizId,
-            q.question,
-            q.questionType,
-            q.correctAnswer,
-            JSON.stringify(q.options || null),
-            q.explanation || null
-          ],
+      // Check if we have the quiz_question_options table
+      try {
+        // First insert the question
+        const questionId = uuidv4();
+        await sequelize.query(
+          `INSERT INTO quiz_questions (id, quiz_id, question, question_type, correct_answer, explanation) 
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          {
+            replacements: [
+              questionId,
+              quizId,
+              q.question,
+              q.questionType,
+              q.correctAnswer,
+              q.explanation || null
+            ],
+          }
+        );
+
+        // If options exist, insert them separately
+        if (q.options && q.options.length > 0) {
+          try {
+            // Try to insert into quiz_question_options table
+            for (let i = 0; i < q.options.length; i++) {
+              await sequelize.query(
+                `INSERT INTO quiz_question_options (id, question_id, option_text, is_correct) 
+                 VALUES (?, ?, ?, ?)`,
+                {
+                  replacements: [
+                    uuidv4(),
+                    questionId,
+                    q.options[i],
+                    q.options[i] === q.correctAnswer // Set is_correct flag
+                  ],
+                }
+              );
+            }
+          } catch (optionError) {
+            console.error('[LOG quiz] ========= Error inserting options:', optionError);
+            // Continue with quiz creation even if options fail
+          }
         }
-      );
+      } catch (questionError) {
+        console.error('[LOG quiz] ========= Error creating question:', questionError);
+        throw questionError; // Rethrow to be caught by main try/catch
+      }
     }
 
     res.status(201).json({
@@ -162,7 +286,7 @@ const submitQuizAttempt = async (req, res) => {
 
   try {
     // Get questions with correct answers
-    const [questions] = await sequelize.query(
+    const questions = await sequelize.query(
       'SELECT id, correct_answer FROM quiz_questions WHERE quiz_id = ?',
       {
         replacements: [quizId],
@@ -208,7 +332,7 @@ const submitQuizAttempt = async (req, res) => {
       correctAnswers: score
     });
   } catch (error) {
-    console.error('Error submitting quiz attempt:', error);
+    console.error('[LOG quiz] ========= Error submitting quiz attempt:', error);
     res.status(500).json({ message: 'Error submitting quiz attempt' });
   }
 };
@@ -237,6 +361,7 @@ const getQuizAttempts = async (req, res) => {
 module.exports = {
   getQuizzes,
   getQuiz,
+  getQuizzesByTopic,
   createQuiz,
   submitQuizAttempt,
   getQuizAttempts

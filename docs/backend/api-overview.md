@@ -97,16 +97,6 @@ The API is documented using Swagger/OpenAPI. You can access the interactive docu
 | GET | `/api/tutoring/tutors` | Get all available tutors | Yes |
 | GET | `/api/tutoring/tutors/:id` | Get a specific tutor's details | Yes |
 
-### Audio Recap
-
-| Method | Endpoint | Description | Authentication Required |
-|--------|----------|-------------|------------------------|
-| GET | `/api/audio` | Get all audio recordings | Yes |
-| POST | `/api/audio` | Upload a new audio recording | Yes |
-| GET | `/api/audio/:id` | Get a specific audio recording | Yes |
-| DELETE | `/api/audio/:id` | Delete an audio recording | Yes |
-| POST | `/api/audio/:id/transcribe` | Transcribe an audio recording | Yes |
-| GET | `/api/audio/:id/transcript` | Get the transcript for an audio recording | Yes |
 
 ### AI Assistant
 

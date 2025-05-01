@@ -10,7 +10,8 @@
     "test:watch": "cross-env NODE_ENV=test jest --watch",
     "test:coverage": "cross-env NODE_ENV=test jest --coverage",
     "lint": "eslint .",
-    "migrate": "node src/config/database/migrate.js"
+    "migrate": "node src/migrations/run_migrations.js",
+    "migrate:indexes": "node -e \"require('./src/migrations/run_migrations').runSingleFile('./src/migrations/create_indexes.sql')\""
   },
   "keywords": [
     "unihub",

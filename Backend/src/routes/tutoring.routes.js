@@ -43,6 +43,60 @@ router.get('/sessions', auth, tutoringController.getSessions);
 
 /**
  * @swagger
+ * /tutoring/tutors:
+ *   get:
+ *     summary: Get available tutors
+ *     tags: [Tutoring]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: topicId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: rating
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *           maximum: 5
+ *     responses:
+ *       200:
+ *         description: List of available tutors
+ */
+router.get('/tutors', auth, tutoringController.getTutors);
+
+/**
+ * @swagger
+ * /tutoring/sessions/topic/{topicId}:
+ *   get:
+ *     summary: Get all tutoring sessions for a specific topic
+ *     tags: [Tutoring]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: topicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The topic ID
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [pending, accepted, completed, cancelled]
+ *         description: Filter sessions by status
+ *     responses:
+ *       200:
+ *         description: List of tutoring sessions for the specified topic
+ *       404:
+ *         description: Topic not found
+ */
+router.get('/sessions/topic/:topicId', auth, tutoringController.getSessionsByTopic);
+
+/**
+ * @swagger
  * /tutoring/sessions/{id}:
  *   get:
  *     summary: Get tutoring session by ID
@@ -162,31 +216,6 @@ router.put(
   ],
   tutoringController.updateSessionStatus
 );
-
-/**
- * @swagger
- * /tutoring/tutors:
- *   get:
- *     summary: Get available tutors
- *     tags: [Tutoring]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: query
- *         name: topicId
- *         schema:
- *           type: string
- *       - in: query
- *         name: rating
- *         schema:
- *           type: number
- *           minimum: 0
- *           maximum: 5
- *     responses:
- *       200:
- *         description: List of available tutors
- */
-router.get('/tutors', auth, tutoringController.getTutors);
 
 /**
  * @swagger

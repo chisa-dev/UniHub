@@ -8,18 +8,39 @@ const signup = async (req, res) => {
   const { username, email, password, fullName } = req.body;
 
   try {
+    // Debug log
+    console.log(`[LOG signup] ========= Signup attempt with username: ${username}, email: ${email}`);
+    
     // Check if user exists
-    const existingUser = await sequelize.query(
-      'SELECT * FROM users WHERE username = ? OR email = ?',
+    const existingUserByUsername = await sequelize.query(
+      'SELECT * FROM users WHERE username = ?',
       {
-        replacements: [username, email],
+        replacements: [username],
         type: QueryTypes.SELECT,
       }
     );
+    
+    const existingUserByEmail = await sequelize.query(
+      'SELECT * FROM users WHERE email = ?',
+      {
+        replacements: [email],
+        type: QueryTypes.SELECT,
+      }
+    );
+    
+    // Debug log existing user check
+    console.log(`[LOG signup] ========= Existing user by username: ${JSON.stringify(existingUserByUsername)}`);
+    console.log(`[LOG signup] ========= Existing user by email: ${JSON.stringify(existingUserByEmail)}`);
 
-    if (existingUser.length > 0) {
+    if (existingUserByUsername.length > 0) {
       return res.status(409).json({ 
-        message: 'User already exists with this username or email' 
+        message: 'Username already taken' 
+      });
+    }
+    
+    if (existingUserByEmail.length > 0) {
+      return res.status(409).json({ 
+        message: 'Email already registered' 
       });
     }
 
@@ -29,6 +50,9 @@ const signup = async (req, res) => {
 
     // Get current timestamp
     const now = new Date();
+    
+    // Generate UUID for the new user
+    const userId = uuidv4();
 
     // Create user
     await sequelize.query(
@@ -36,7 +60,7 @@ const signup = async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       {
         replacements: [
-          uuidv4(),
+          userId,
           username,
           email,
           hashedPassword,
@@ -47,11 +71,42 @@ const signup = async (req, res) => {
         type: QueryTypes.INSERT
       }
     );
+    
+    // Fetch the newly created user
+    const [newUser] = await sequelize.query(
+      'SELECT * FROM users WHERE id = ?',
+      {
+        replacements: [userId],
+        type: QueryTypes.SELECT,
+      }
+    );
+    
+    // Generate token
+    const token = jwt.sign(
+      { 
+        id: newUser.id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role
+      },
+      process.env.JWT_SECRET || 'your-secret-key',
+      { expiresIn: '24h' }
+    );
+    
+    // Remove sensitive data
+    delete newUser.password_hash;
+    
+    // Log successful signup
+    console.log(`[LOG signup] ========= User ${username} successfully registered with ID ${userId}`);
 
-    res.status(201).json({ message: 'User created successfully' });
+    res.status(201).json({ 
+      message: 'User created successfully',
+      token,
+      user: newUser
+    });
   } catch (error) {
-    console.error('Signup error:', error);
-    res.status(500).json({ message: 'Error creating user' });
+    console.error('[LOG signup ERROR] =========', error);
+    res.status(500).json({ message: 'Error creating user', error: error.message });
   }
 };
 
@@ -99,8 +154,8 @@ const login = async (req, res) => {
       user
     });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ message: 'Error during login' });
+    console.error('[LOG login ERROR] =========', error);
+    res.status(500).json({ message: 'Error during login', error: error.message });
   }
 };
 

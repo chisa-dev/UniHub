@@ -87,6 +87,63 @@ const getSession = async (req, res) => {
   }
 };
 
+const getSessionsByTopic = async (req, res) => {
+  const { topicId } = req.params;
+  const { status } = req.query;
+
+  try {
+    if (!topicId) {
+      return res.status(400).json({ message: 'Topic ID is required' });
+    }
+    
+    // Verify topic exists
+    const [topic] = await sequelize.query(
+      'SELECT id FROM topics WHERE id = ?',
+      {
+        replacements: [topicId],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    if (!topic) {
+      return res.status(404).json({ message: 'Topic not found' });
+    }
+
+    let whereClause = 'WHERE ts.topic_id = ? AND (ts.tutor_id = ? OR ts.student_id = ?)';
+    const replacements = [topicId, req.user.id, req.user.id];
+
+    if (status) {
+      whereClause += ' AND ts.status = ?';
+      replacements.push(status);
+    }
+
+    const [sessions] = await sequelize.query(
+      `SELECT ts.*, 
+              t.title as topic_title,
+              tutor.username as tutor_name,
+              student.username as student_name,
+              COALESCE(tr.rating, 0) as rating,
+              tr.comment as review_comment
+       FROM tutoring_sessions ts
+       LEFT JOIN topics t ON ts.topic_id = t.id
+       LEFT JOIN users tutor ON ts.tutor_id = tutor.id
+       LEFT JOIN users student ON ts.student_id = student.id
+       LEFT JOIN tutoring_reviews tr ON ts.id = tr.session_id
+       ${whereClause}
+       ORDER BY ts.start_time DESC`,
+      {
+        replacements,
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    res.json(sessions);
+  } catch (error) {
+    console.error('[LOG tutoring] ========= Error fetching tutoring sessions by topic:', error);
+    res.status(500).json({ message: 'Error fetching tutoring sessions by topic' });
+  }
+};
+
 const createSession = async (req, res) => {
   const { 
     topicId, tutorId, startTime, endTime,
@@ -324,6 +381,7 @@ const submitReview = async (req, res) => {
 module.exports = {
   getSessions,
   getSession,
+  getSessionsByTopic,
   createSession,
   updateSessionStatus,
   getTutors,

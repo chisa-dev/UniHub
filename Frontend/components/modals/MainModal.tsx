@@ -7,7 +7,6 @@ import ShareViedeoModal from "./ShareViedeoModal";
 import ShareImageModal from "./ShareImageModal";
 import AdjustPhotoModal from "./AdjustPhotoModal";
 import ShareRetouchImageModal from "./ShareRetouchImageModal";
-import AudioCreationModal from "./AudioCreationModal";
 import EditProfileModal from "./EditYourProfile";
 import IntegrationModal from "./IntegrationModal";
 import SettingsModal from "./SettingsModal";
@@ -59,7 +58,6 @@ function MainModal() {
         {modalName === "Share Image" && <ShareImageModal />}
         {modalName === "Adjust Photo" && <AdjustPhotoModal />}
         {modalName === "Share Retouch Image" && <ShareRetouchImageModal />}
-        {modalName === "Audio Creation" && <AudioCreationModal />}
         {modalName === "Edit Profile" && <EditProfileModal />}
         {modalName === "Integrations" && <IntegrationModal />}
         {modalName === "Settings" && <SettingsModal />}

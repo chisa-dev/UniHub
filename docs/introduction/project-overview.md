@@ -41,11 +41,6 @@ UniHub offers a robust set of features tailored to meet the needs of today's stu
 - Virtual meeting capabilities
 - Rating and review system for tutors
 
-### Audio Recap
-- Record and transcribe lectures and discussions
-- Generate summaries of audio content
-- Extract key points and concepts
-- Search through audio transcripts
 
 ### AI Assistant
 - Get instant help with academic questions
@@ -70,7 +65,7 @@ The UniHub platform is built using modern web technologies, following a client-s
 - **Backend**: Node.js with Express, offering a robust API for the frontend to interact with
 - **Database**: Relational database (MySQL) for structured data storage
 - **Authentication**: JWT-based authentication system for secure access
-- **AI Integration**: Integration with AI services for features like the AI Assistant and Audio Recap
+- **AI Integration**: Integration with AI services for features like the AI Assistant 
 
 ## Current Status
 

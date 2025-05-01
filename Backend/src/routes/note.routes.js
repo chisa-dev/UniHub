@@ -43,6 +43,59 @@ router.get('/', auth, noteController.getNotes);
 
 /**
  * @swagger
+ * /notes/topic/{topicId}:
+ *   get:
+ *     summary: Get all notes for a specific topic
+ *     tags: [Notes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: topicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The topic ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: List of notes for the specified topic
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       404:
+ *         description: Topic not found
+ */
+router.get('/topic/:topicId', auth, noteController.getNotesByTopic);
+
+/**
+ * @swagger
  * /notes/{id}:
  *   get:
  *     summary: Get note by ID

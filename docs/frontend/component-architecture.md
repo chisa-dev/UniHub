@@ -17,7 +17,6 @@ Frontend/
 │   ├── topics/              # Topic management
 │   ├── notes-materials/     # Notes and study materials
 │   ├── tests-quizfetch/     # Quizzes and tests
-│   ├── audio-recap/         # Audio recap feature
 │   ├── tutor-me/            # Tutoring services
 │   ├── calendar/            # Calendar and scheduling
 │   ├── assistance/          # AI assistant
@@ -105,9 +104,7 @@ Each feature has its own page component that composes smaller components:
 - Displays quizzes and allows taking/creating quizzes
 - Includes quiz list, quiz creator, and quiz player components
 
-#### `AudioRecapPage` (app/audio-recap/page.tsx)
-- Manages audio recordings and transcriptions
-- Includes audio recorder, player, and transcript components
+
 
 #### `TutorPage` (app/tutor-me/page.tsx)
 - Facilitates tutoring sessions
@@ -150,7 +147,6 @@ Components specific to particular features:
 - Topic browser
 - Note editor
 - Quiz creator/player
-- Audio player/recorder
 - Calendar view
 - Tutoring interface
 

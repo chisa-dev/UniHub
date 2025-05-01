@@ -17,7 +17,7 @@ const getTopics = async (req, res) => {
     );
 
     // Get topics
-    const [topics] = await sequelize.query(
+    const topics = await sequelize.query(
       `SELECT t.*, u.username as creator_name 
        FROM topics t 
        LEFT JOIN users u ON t.creator_id = u.id 
@@ -30,6 +30,9 @@ const getTopics = async (req, res) => {
       }
     );
 
+    // Add debug logging
+    console.log(`[LOG getTopics] ========= Found ${topics.length} topics`);
+    
     res.json({
       topics,
       pagination: {
@@ -39,7 +42,7 @@ const getTopics = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching topics:', error);
+    console.error('[LOG getTopics ERROR] =========', error);
     res.status(500).json({ message: 'Error fetching topics' });
   }
 };

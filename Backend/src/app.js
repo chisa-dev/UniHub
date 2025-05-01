@@ -14,9 +14,10 @@ const quizRoutes = require('./routes/quiz.routes');
 const noteRoutes = require('./routes/note.routes');
 const calendarRoutes = require('./routes/calendar.routes');
 const tutoringRoutes = require('./routes/tutoring.routes');
-const audioRoutes = require('./routes/audio.routes');
 const aiAssistantRoutes = require('./routes/ai-assistant.routes');
 const statusRoutes = require('./routes/status.routes');
+const statisticsRoutes = require('./routes/statistics.routes');
+const materialRoutes = require('./routes/material.routes');
 
 const app = express();
 
@@ -42,19 +43,23 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from uploads folder
+app.use('/materials', express.static(path.join(__dirname, '../uploads/materials')));
+
 // Database initialization
 const initializeDatabase = async () => {
   try {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
     
-    // In development, sync the database
+    // In development, we'll use migrations instead of automatic sync
+    // to ensure proper table creation order
     if (process.env.NODE_ENV === 'development') {
-      // Drop all tables first
-      await sequelize.query('SET FOREIGN_KEY_CHECKS = 0');
-      await sequelize.sync({ force: true });
-      await sequelize.query('SET FOREIGN_KEY_CHECKS = 1');
-      console.log('Database tables dropped and recreated successfully.');
+      console.log('Running in development mode - database tables will not be auto-synced');
+      console.log('Please run migrations manually if needed');
+      // Commenting out the sync to prevent foreign key errors
+      // await sequelize.sync();
+      // console.log('Database tables synced successfully.');
     }
   } catch (error) {
     console.error('Unable to connect to the database:', error);
@@ -114,8 +119,9 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/tutoring', tutoringRoutes);
-app.use('/api/audio', audioRoutes);
 app.use('/api/ai-assistant', aiAssistantRoutes);
+app.use('/api/statistics', statisticsRoutes);
+app.use('/api/materials', materialRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

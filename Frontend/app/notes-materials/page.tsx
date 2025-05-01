@@ -1,130 +1,176 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PiNote,
   PiFolderOpen,
   PiPlus,
   PiUpload,
   PiMagnifyingGlass,
-  PiDotsThreeVertical,
   PiDownload,
-  PiShareFat,
   PiTrash,
-  PiFilePdf,
-  PiFileDoc,
-  PiFileCsv,
-  PiImage,
-  PiFileText,
-  PiTag,
   PiFolder,
   PiBookOpen,
   PiClock
 } from "react-icons/pi";
+import { getStatistics, TopicProgress } from "./statistics.service";
+import { getAllMaterials, getMaterialsByTopic, Material, deleteMaterial, deleteAllMaterialsByTopic } from "./materials.service";
+import { formatFileSize, getFormattedDate, getFileIconComponent, getFileIconColorClass } from "./utils";
+import UploadFileModal from "./UploadFileModal";
+import ConfirmDialog from "./ConfirmDialog";
 
 const NotesMaterials = () => {
   const [selectedFolder, setSelectedFolder] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedView, setSelectedView] = useState("grid");
+  const [topics, setTopics] = useState<TopicProgress[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   
-  // Mock folders data
-  const folders = [
-    { id: "all", name: "All Files", count: 24 },
-    { id: "recent", name: "Recent", count: 8 },
-    { id: "math", name: "Mathematics", count: 5 },
-    { id: "science", name: "Science", count: 7 },
-    { id: "history", name: "History", count: 4 },
-    { id: "english", name: "English", count: 3 },
-    { id: "cs", name: "Computer Science", count: 5 }
-  ];
+  // Delete material confirm dialog state
+  const [isDeleteMaterialDialogOpen, setIsDeleteMaterialDialogOpen] = useState(false);
+  const [materialToDelete, setMaterialToDelete] = useState<Material | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
-  // Mock files data
-  const files = [
-    {
-      id: 1,
-      name: "Calculus Notes",
-      type: "pdf",
-      size: "2.4 MB",
-      modified: "May 10, 2023",
-      folder: "math",
-      icon: <PiFilePdf className="text-errorColor" />
-    },
-    {
-      id: 2,
-      name: "Biology Chapter 5",
-      type: "docx",
-      size: "1.8 MB",
-      modified: "May 8, 2023",
-      folder: "science",
-      icon: <PiFileDoc className="text-primaryColor" />
-    },
-    {
-      id: 3,
-      name: "World History Timeline",
-      type: "xlsx",
-      size: "925 KB",
-      modified: "May 5, 2023",
-      folder: "history",
-      icon: <PiFileCsv className="text-successColor" />
-    },
-    {
-      id: 4,
-      name: "Chemistry Lab Report",
-      type: "pdf",
-      size: "3.2 MB",
-      modified: "May 3, 2023",
-      folder: "science",
-      icon: <PiFilePdf className="text-errorColor" />
-    },
-    {
-      id: 5,
-      name: "Literature Essay",
-      type: "docx",
-      size: "780 KB",
-      modified: "April 29, 2023",
-      folder: "english",
-      icon: <PiFileDoc className="text-primaryColor" />
-    },
-    {
-      id: 6,
-      name: "Physics Diagrams",
-      type: "png",
-      size: "4.1 MB",
-      modified: "April 25, 2023",
-      folder: "science",
-      icon: <PiImage className="text-secondaryColor" />
-    },
-    {
-      id: 7,
-      name: "Programming Notes",
-      type: "txt",
-      size: "120 KB",
-      modified: "April 22, 2023",
-      folder: "cs",
-      icon: <PiFileText className="text-n300" />
-    },
-    {
-      id: 8,
-      name: "Algebra Study Guide",
-      type: "pdf",
-      size: "1.5 MB",
-      modified: "April 20, 2023",
-      folder: "math",
-      icon: <PiFilePdf className="text-errorColor" />
+  // Delete all materials by topic confirm dialog state
+  const [isDeleteAllMaterialsDialogOpen, setIsDeleteAllMaterialsDialogOpen] = useState(false);
+  const [topicToDeleteFrom, setTopicToDeleteFrom] = useState<TopicProgress | null>(null);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  
+  // Fetch topics and materials
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        // Fetch topics statistics
+        const statisticsData = await getStatistics();
+        setTopics(statisticsData.topics_progress);
+        
+        // Fetch all materials initially
+        const materialsData = await getAllMaterials();
+        setMaterials(materialsData);
+      } catch (error) {
+        console.error('[LOG notes_materials] ========= Error fetching data:', error);
+        setError('Failed to load data. Please try again later.');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  // Filter materials when folder selection changes
+  useEffect(() => {
+    const fetchMaterialsByTopic = async () => {
+      if (selectedFolder === 'all') {
+        // Fetch all materials
+        try {
+          const materialsData = await getAllMaterials();
+          setMaterials(materialsData);
+        } catch (error) {
+          console.error('[LOG notes_materials] ========= Error fetching all materials:', error);
+          setError('Failed to load materials.');
+        }
+      } else {
+        // Fetch materials by topic
+        try {
+          const materialsData = await getMaterialsByTopic(selectedFolder);
+          setMaterials(materialsData);
+        } catch (error) {
+          console.error('[LOG notes_materials] ========= Error fetching materials by topic:', error);
+          setError('Failed to load materials for the selected topic.');
+        }
+      }
+    };
+    
+    fetchMaterialsByTopic();
+  }, [selectedFolder]);
+  
+  // Handle refresh after upload or delete
+  const handleRefreshData = async () => {
+    try {
+      if (selectedFolder === 'all') {
+        const materialsData = await getAllMaterials();
+        setMaterials(materialsData);
+      } else {
+        const materialsData = await getMaterialsByTopic(selectedFolder);
+        setMaterials(materialsData);
+      }
+      
+      // Refresh topic counts
+      const statisticsData = await getStatistics();
+      setTopics(statisticsData.topics_progress);
+    } catch (error) {
+      console.error('[LOG notes_materials] ========= Error refreshing data:', error);
     }
-  ];
+  };
   
-  // Filter files based on selected folder and search query
-  const filteredFiles = files.filter(file => {
-    const matchesFolder = selectedFolder === "all" || file.folder === selectedFolder;
-    const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesFolder && matchesSearch;
-  });
+  // Handler for opening delete material confirmation dialog
+  const handleDeleteMaterialClick = (material: Material) => {
+    setMaterialToDelete(material);
+    setIsDeleteMaterialDialogOpen(true);
+  };
   
-  // Files for "Recent" folder
-  const recentFiles = selectedFolder === "recent" 
-    ? files.slice(0, 3) 
-    : filteredFiles;
+  // Handler for opening delete all materials confirmation dialog
+  const handleDeleteAllMaterialsClick = (topic: TopicProgress) => {
+    setTopicToDeleteFrom(topic);
+    setIsDeleteAllMaterialsDialogOpen(true);
+  };
+  
+  // Handler for deleting a single material
+  const handleDeleteMaterial = async () => {
+    if (!materialToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      await deleteMaterial(materialToDelete.id);
+      
+      // Close dialog and refresh data
+      setIsDeleteMaterialDialogOpen(false);
+      await handleRefreshData();
+    } catch (error) {
+      console.error('[LOG notes_materials] ========= Error deleting material:', error);
+      // You could add an error message here
+    } finally {
+      setIsDeleting(false);
+      setMaterialToDelete(null);
+    }
+  };
+  
+  // Handler for deleting all materials in a topic
+  const handleDeleteAllMaterials = async () => {
+    if (!topicToDeleteFrom) return;
+    
+    setIsDeletingAll(true);
+    try {
+      await deleteAllMaterialsByTopic(topicToDeleteFrom.topicId);
+      
+      // Close dialog and refresh data
+      setIsDeleteAllMaterialsDialogOpen(false);
+      await handleRefreshData();
+    } catch (error) {
+      console.error('[LOG notes_materials] ========= Error deleting all materials:', error);
+      // You could add an error message here
+    } finally {
+      setIsDeletingAll(false);
+      setTopicToDeleteFrom(null);
+    }
+  };
+  
+  // Filter materials based on search query
+  const filteredMaterials = materials.filter(material => 
+    material.file_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // Get file icon component
+  const getFileIcon = (fileType: string) => {
+    const IconComponent = getFileIconComponent(fileType);
+    const colorClass = getFileIconColorClass(fileType);
+    return <IconComponent className={colorClass} />;
+  };
 
   return (
     <div className="w-full max-w-[1070px] mx-auto">
@@ -135,11 +181,10 @@ const NotesMaterials = () => {
         </h1>
         
         <div className="flex gap-2">
-          <button className="py-2 px-4 border border-primaryColor/30 text-primaryColor rounded-xl hover:bg-primaryColor/5 flex items-center gap-1">
-            <PiFolderOpen />
-            <span>New Folder</span>
-          </button>
-          <button className="bg-primaryColor text-white py-2 px-4 rounded-xl flex items-center gap-1">
+          <button 
+            onClick={() => setIsUploadModalOpen(true)}
+            className="bg-primaryColor text-white py-2 px-4 rounded-xl flex items-center gap-1"
+          >
             <PiPlus />
             <span>Add File</span>
           </button>
@@ -150,40 +195,81 @@ const NotesMaterials = () => {
         <div className="lg:col-span-1">
           <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-medium">Folders</h3>
-              <button className="text-primaryColor p-1 rounded hover:bg-primaryColor/10">
-                <PiPlus />
-              </button>
+              <h3 className="font-medium">Topics</h3>
             </div>
             
             <div className="space-y-1">
-              {folders.map((folder) => (
-                <button
-                  key={folder.id}
-                  onClick={() => setSelectedFolder(folder.id)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg text-left ${
-                    selectedFolder === folder.id
+              <div
+                key="all-files"
+                className={`relative group ${
+                  selectedFolder === "all"
+                    ? "bg-primaryColor/10 text-primaryColor"
+                    : "hover:bg-primaryColor/5"
+                } rounded-lg flex items-center justify-between p-3`}
+              >
+                <div 
+                  onClick={() => setSelectedFolder("all")}
+                  className="flex-1 flex items-center gap-2 cursor-pointer"
+                >
+                  <PiFolder size={18} />
+                  <span>All Files</span>
+                </div>
+                
+                <div className="flex items-center">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-n300/10">
+                    {topics.reduce((sum, topic) => sum + topic.materialsCount, 0)}
+                  </span>
+                </div>
+              </div>
+              
+              {topics.map((topic) => (
+                <div 
+                  key={topic.topicId} 
+                  className={`relative group ${
+                    selectedFolder === topic.topicId
                       ? "bg-primaryColor/10 text-primaryColor"
                       : "hover:bg-primaryColor/5"
-                  }`}
+                  } rounded-lg flex items-center justify-between p-3`}
                 >
-                  <div className="flex items-center gap-2">
+                  <div 
+                    onClick={() => setSelectedFolder(topic.topicId)}
+                    className="flex-1 flex items-center gap-2 cursor-pointer"
+                  >
                     <PiFolder size={18} />
-                    <span>{folder.name}</span>
+                    <span>{topic.topicTitle}</span>
                   </div>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-n300/10">{folder.count}</span>
-                </button>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-n300/10">
+                      {topic.materialsCount}
+                    </span>
+                    
+                    {/* Delete button that appears on hover */}
+                    {topic.materialsCount > 0 && (
+                      <button 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAllMaterialsClick(topic);
+                        }}
+                        className="p-1.5 bg-errorColor/10 text-errorColor rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-errorColor/20"
+                        aria-label={`Delete all materials in ${topic.topicTitle}`}
+                      >
+                        <PiTrash size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
             
             <div className="mt-6 pt-5 border-t border-primaryColor/10">
               <h4 className="text-sm font-medium mb-3">Storage</h4>
               <div className="w-full bg-n300/20 rounded-full h-2 mb-1">
-                <div className="bg-primaryColor h-2 rounded-full" style={{ width: "45%" }}></div>
+                <div className="bg-primaryColor h-2 rounded-full" style={{ width: "5%" }}></div>
               </div>
               <div className="flex justify-between text-xs text-n300 dark:text-n400">
-                <span>4.5 GB used</span>
-                <span>10 GB total</span>
+                <span>0.1 GB used</span>
+                <span>Unlimited total</span>
               </div>
             </div>
           </div>
@@ -192,7 +278,10 @@ const NotesMaterials = () => {
             <h3 className="font-medium mb-4">Quick Actions</h3>
             
             <div className="space-y-2">
-              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40">
+              <button 
+                onClick={() => setIsUploadModalOpen(true)}
+                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40"
+              >
                 <PiUpload className="text-primaryColor" />
                 <span className="text-sm">Upload File</span>
               </button>
@@ -203,8 +292,8 @@ const NotesMaterials = () => {
               </button>
               
               <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40">
-                <PiTag className="text-primaryColor" />
-                <span className="text-sm">Manage Tags</span>
+                <PiBookOpen className="text-primaryColor" />
+                <span className="text-sm">Study Materials</span>
               </button>
             </div>
           </div>
@@ -256,116 +345,176 @@ const NotesMaterials = () => {
             <div className="flex items-center gap-1 text-sm mb-4">
               <span className="text-n300 dark:text-n400">Files</span>
               <span className="text-n300 dark:text-n400">/</span>
-              <span className="text-primaryColor">{folders.find(f => f.id === selectedFolder)?.name}</span>
+              <span className="text-primaryColor">
+                {selectedFolder === "all" 
+                  ? "All Files" 
+                  : topics.find(t => t.topicId === selectedFolder)?.topicTitle || "Unknown Topic"}
+              </span>
             </div>
             
+            {/* Loading state */}
+            {isLoading && (
+              <div className="flex justify-center items-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primaryColor"></div>
+              </div>
+            )}
+            
+            {/* Error state */}
+            {error && !isLoading && (
+              <div className="text-center py-8">
+                <div className="text-errorColor mb-2">{error}</div>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="py-2 px-4 bg-primaryColor text-white rounded-lg"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+            
             {/* Grid view */}
-            {selectedView === "grid" && (
+            {!isLoading && !error && selectedView === "grid" && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {recentFiles.map((file) => (
-                  <div 
-                    key={file.id}
-                    className="p-4 border border-primaryColor/20 rounded-xl hover:border-primaryColor/40 cursor-pointer group"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-n300/10 rounded-lg">{file.icon}</div>
-                        <div>
-                          <h4 className="font-medium text-sm line-clamp-1">{file.name}</h4>
-                          <p className="text-xs text-n300 dark:text-n400">
-                            {file.type.toUpperCase()} • {file.size}
-                          </p>
+                {filteredMaterials.length > 0 ? (
+                  filteredMaterials.map((material) => (
+                    <div 
+                      key={material.id}
+                      className="p-4 border border-primaryColor/20 rounded-xl hover:border-primaryColor/40 cursor-pointer group"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-n300/10 rounded-lg">
+                            {getFileIcon(material.file_type)}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-sm line-clamp-1">{material.file_name}</h4>
+                            <p className="text-xs text-n300 dark:text-n400">
+                              {material.file_type.toUpperCase()} • {formatFileSize(material.file_size)}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="relative">
+                          <button 
+                            onClick={() => handleDeleteMaterialClick(material)}
+                            className="p-1 text-errorColor bg-errorColor/10 rounded opacity-0 group-hover:opacity-100 hover:bg-errorColor/20 transition-opacity"
+                          >
+                            <PiTrash size={16} />
+                          </button>
                         </div>
                       </div>
-                      <div className="relative">
-                        <button className="p-1 opacity-0 group-hover:opacity-100 hover:bg-primaryColor/10 rounded transition-opacity">
-                          <PiDotsThreeVertical />
-                        </button>
-                        {/* Dropdown menu would go here in a real implementation */}
+                      <div className="mt-4 pt-3 border-t border-primaryColor/10 flex items-center justify-between text-xs text-n300 dark:text-n400">
+                        <span className="flex items-center gap-1">
+                          <PiClock size={12} />
+                          {getFormattedDate(material.createdAt)}
+                        </span>
+                        <div className="flex gap-2">
+                          <a 
+                            href={material.fileUrl} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="hover:text-primaryColor"
+                          >
+                            <PiDownload size={14} />
+                          </a>
+                        </div>
                       </div>
                     </div>
-                    <div className="mt-4 pt-3 border-t border-primaryColor/10 flex items-center justify-between text-xs text-n300 dark:text-n400">
-                      <span className="flex items-center gap-1">
-                        <PiClock size={12} />
-                        {file.modified}
-                      </span>
-                      <div className="flex gap-2">
-                        <button className="hover:text-primaryColor">
-                          <PiDownload size={14} />
-                        </button>
-                        <button className="hover:text-primaryColor">
-                          <PiShareFat size={14} />
-                        </button>
-                      </div>
+                  ))
+                ) : (
+                  <div className="col-span-3 text-center py-8">
+                    <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-primaryColor/10 mb-3">
+                      <PiFolderOpen size={24} className="text-primaryColor" />
                     </div>
+                    <h3 className="font-medium mb-1">No files found</h3>
+                    <p className="text-sm text-n300 dark:text-n400">
+                      {searchQuery 
+                        ? "No files match your search criteria" 
+                        : "Upload files to this topic to get started"}
+                    </p>
+                    <button 
+                      onClick={() => setIsUploadModalOpen(true)}
+                      className="mt-4 py-2 px-4 bg-primaryColor text-white rounded-lg"
+                    >
+                      Upload Files
+                    </button>
                   </div>
-                ))}
+                )}
               </div>
             )}
             
             {/* List view */}
-            {selectedView === "list" && (
+            {!isLoading && !error && selectedView === "list" && (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[600px]">
-                  <thead>
-                    <tr className="border-b border-primaryColor/10">
-                      <th className="py-2 px-4 text-left font-medium text-sm">Name</th>
-                      <th className="py-2 px-4 text-left font-medium text-sm">Type</th>
-                      <th className="py-2 px-4 text-left font-medium text-sm">Size</th>
-                      <th className="py-2 px-4 text-left font-medium text-sm">Modified</th>
-                      <th className="py-2 px-4 text-left font-medium text-sm">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentFiles.map((file) => (
-                      <tr key={file.id} className="border-b border-primaryColor/10 hover:bg-primaryColor/5">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-2">
-                            {file.icon}
-                            <span className="text-sm">{file.name}</span>
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-n300 dark:text-n400">
-                          {file.type.toUpperCase()}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-n300 dark:text-n400">
-                          {file.size}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-n300 dark:text-n400">
-                          {file.modified}
-                        </td>
-                        <td className="py-3 px-4">
-                          <div className="flex gap-2">
-                            <button className="p-1 hover:bg-primaryColor/10 rounded text-primaryColor">
-                              <PiDownload size={16} />
-                            </button>
-                            <button className="p-1 hover:bg-primaryColor/10 rounded text-primaryColor">
-                              <PiShareFat size={16} />
-                            </button>
-                            <button className="p-1 hover:bg-errorColor/10 rounded text-errorColor">
-                              <PiTrash size={16} />
-                            </button>
-                          </div>
-                        </td>
+                {filteredMaterials.length > 0 ? (
+                  <table className="w-full min-w-[600px]">
+                    <thead>
+                      <tr className="border-b border-primaryColor/10">
+                        <th className="py-2 px-4 text-left font-medium text-sm">Name</th>
+                        <th className="py-2 px-4 text-left font-medium text-sm">Type</th>
+                        <th className="py-2 px-4 text-left font-medium text-sm">Size</th>
+                        <th className="py-2 px-4 text-left font-medium text-sm">Date</th>
+                        <th className="py-2 px-4 text-left font-medium text-sm">Actions</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-            
-            {recentFiles.length === 0 && (
-              <div className="text-center py-8">
-                <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-primaryColor/10 mb-3">
-                  <PiFolderOpen size={24} className="text-primaryColor" />
-                </div>
-                <h3 className="font-medium mb-1">No files found</h3>
-                <p className="text-sm text-n300 dark:text-n400">
-                  Upload files or create a new note to get started
-                </p>
-                <button className="mt-4 py-2 px-4 bg-primaryColor text-white rounded-lg">
-                  Upload Files
-                </button>
+                    </thead>
+                    <tbody>
+                      {filteredMaterials.map((material) => (
+                        <tr key={material.id} className="border-b border-primaryColor/10 hover:bg-primaryColor/5">
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              {getFileIcon(material.file_type)}
+                              <span className="text-sm">{material.file_name}</span>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-n300 dark:text-n400">
+                            {material.file_type.toUpperCase()}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-n300 dark:text-n400">
+                            {formatFileSize(material.file_size)}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-n300 dark:text-n400">
+                            {getFormattedDate(material.createdAt)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-2">
+                              <a 
+                                href={material.fileUrl} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                className="p-1 hover:bg-primaryColor/10 rounded text-primaryColor"
+                              >
+                                <PiDownload size={16} />
+                              </a>
+                              <button 
+                                onClick={() => handleDeleteMaterialClick(material)}
+                                className="p-1 hover:bg-errorColor/10 rounded text-errorColor"
+                              >
+                                <PiTrash size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                ) : (
+                  <div className="text-center py-8">
+                    <div className="mx-auto w-16 h-16 flex items-center justify-center rounded-full bg-primaryColor/10 mb-3">
+                      <PiFolderOpen size={24} className="text-primaryColor" />
+                    </div>
+                    <h3 className="font-medium mb-1">No files found</h3>
+                    <p className="text-sm text-n300 dark:text-n400">
+                      {searchQuery 
+                        ? "No files match your search criteria" 
+                        : "Upload files to this topic to get started"}
+                    </p>
+                    <button 
+                      onClick={() => setIsUploadModalOpen(true)}
+                      className="mt-4 py-2 px-4 bg-primaryColor text-white rounded-lg"
+                    >
+                      Upload Files
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -374,77 +523,102 @@ const NotesMaterials = () => {
             <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium">Recent Activity</h3>
-                <button className="text-xs text-primaryColor hover:underline">View All</button>
+                <a href="#" className="text-xs text-primaryColor hover:underline">View All</a>
               </div>
               
               <div className="space-y-3">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primaryColor/10">
-                    <PiUpload className="text-primaryColor" />
+                {materials.slice(0, 3).map((material, index) => (
+                  <div key={material.id} className="flex items-start gap-3">
+                    <div className="p-2 rounded-lg bg-primaryColor/10">
+                      <PiUpload className="text-primaryColor" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm">Uploaded {material.file_name}</div>
+                      <p className="text-xs text-n300 dark:text-n400">{getFormattedDate(material.createdAt)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-medium text-sm">Uploaded Chemistry Notes</div>
-                    <p className="text-xs text-n300 dark:text-n400">1 hour ago</p>
-                  </div>
-                </div>
+                ))}
                 
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-secondaryColor/10">
-                    <PiNote className="text-secondaryColor" />
+                {materials.length === 0 && (
+                  <div className="text-center py-4 text-n300">
+                    No recent activity
                   </div>
-                  <div>
-                    <div className="font-medium text-sm">Created New Study Guide</div>
-                    <p className="text-xs text-n300 dark:text-n400">3 hours ago</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-warningColor/10">
-                    <PiShareFat className="text-warningColor" />
-                  </div>
-                  <div>
-                    <div className="font-medium text-sm">Shared Physics Diagrams</div>
-                    <p className="text-xs text-n300 dark:text-n400">Yesterday</p>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
             
             <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium">Quick Study Materials</h3>
-                <button className="text-xs text-primaryColor hover:underline">View All</button>
+                <a href="#" className="text-xs text-primaryColor hover:underline">View All</a>
               </div>
               
               <div className="space-y-3">
-                <div className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PiBookOpen className="text-primaryColor" />
-                    <span className="text-sm font-medium">Math Formula Sheet</span>
+                {materials.filter(m => m.file_type === 'pdf').slice(0, 3).map((material) => (
+                  <div key={material.id} className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <PiBookOpen className="text-primaryColor" />
+                      <span className="text-sm font-medium">{material.file_name}</span>
+                    </div>
+                    <a 
+                      href={material.fileUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-xs text-primaryColor hover:underline"
+                    >
+                      Open
+                    </a>
                   </div>
-                  <button className="text-xs text-primaryColor hover:underline">Open</button>
-                </div>
+                ))}
                 
-                <div className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PiBookOpen className="text-primaryColor" />
-                    <span className="text-sm font-medium">Chemistry Periodic Table</span>
+                {materials.filter(m => m.file_type === 'pdf').length === 0 && (
+                  <div className="text-center py-4 text-n300">
+                    No study materials available
                   </div>
-                  <button className="text-xs text-primaryColor hover:underline">Open</button>
-                </div>
-                
-                <div className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <PiBookOpen className="text-primaryColor" />
-                    <span className="text-sm font-medium">Language Conjugation Guide</span>
-                  </div>
-                  <button className="text-xs text-primaryColor hover:underline">Open</button>
-                </div>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* Upload File Modal */}
+      {isUploadModalOpen && (
+        <UploadFileModal
+          isOpen={isUploadModalOpen}
+          onClose={() => setIsUploadModalOpen(false)}
+          topics={topics}
+          onUploadSuccess={handleRefreshData}
+        />
+      )}
+      
+      {/* Delete Material Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteMaterialDialogOpen}
+        title="Delete Material"
+        message={`Are you sure you want to delete "${materialToDelete?.file_name}"? This action cannot be undone.`}
+        confirmButtonText="Delete"
+        onConfirm={handleDeleteMaterial}
+        onCancel={() => {
+          setIsDeleteMaterialDialogOpen(false);
+          setMaterialToDelete(null);
+        }}
+        isLoading={isDeleting}
+      />
+      
+      {/* Delete All Materials Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={isDeleteAllMaterialsDialogOpen}
+        title="Delete All Materials"
+        message={`Are you sure you want to delete all materials from "${topicToDeleteFrom?.topicTitle}"? This action cannot be undone.`}
+        confirmButtonText="Delete All"
+        onConfirm={handleDeleteAllMaterials}
+        onCancel={() => {
+          setIsDeleteAllMaterialsDialogOpen(false);
+          setTopicToDeleteFrom(null);
+        }}
+        isLoading={isDeletingAll}
+      />
     </div>
   );
 };

@@ -43,6 +43,59 @@ router.get('/', auth, quizController.getQuizzes);
 
 /**
  * @swagger
+ * /quizzes/topic/{topicId}:
+ *   get:
+ *     summary: Get all quizzes for a specific topic
+ *     tags: [Quizzes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: topicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The topic ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number for pagination
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: List of quizzes for the specified topic
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 quizzes:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                 pagination:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                     page:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *       404:
+ *         description: Topic not found
+ */
+router.get('/topic/:topicId', auth, quizController.getQuizzesByTopic);
+
+/**
+ * @swagger
  * /quizzes/{id}:
  *   get:
  *     summary: Get quiz by ID with questions
@@ -62,6 +115,26 @@ router.get('/', auth, quizController.getQuizzes);
  *         description: Quiz not found
  */
 router.get('/:id', auth, quizController.getQuiz);
+
+/**
+ * @swagger
+ * /quizzes/{id}/attempts:
+ *   get:
+ *     summary: Get quiz attempts for a user
+ *     tags: [Quizzes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: List of quiz attempts
+ */
+router.get('/:id/attempts', auth, quizController.getQuizAttempts);
 
 /**
  * @swagger
@@ -175,25 +248,5 @@ router.post(
   ],
   quizController.submitQuizAttempt
 );
-
-/**
- * @swagger
- * /quizzes/{id}/attempts:
- *   get:
- *     summary: Get quiz attempts for a user
- *     tags: [Quizzes]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: List of quiz attempts
- */
-router.get('/:id/attempts', auth, quizController.getQuizAttempts);
 
 module.exports = router; 

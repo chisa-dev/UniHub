@@ -1,3 +1,3 @@
-import { WithLayoutLayout } from "../(with-layout)/layout";
+import { WithLayoutLayout } from "../dashboard/layout";
 
 export default WithLayoutLayout; 
