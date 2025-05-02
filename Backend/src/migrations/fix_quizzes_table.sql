@@ -1,5 +1,5 @@
 -- Fix quizzes table schema to make it compatible with our application
-USE unihub_db;
+
 
 -- 1. Check and set questions column to NOT NULL with default empty JSON
 SET @columnExists = 0;

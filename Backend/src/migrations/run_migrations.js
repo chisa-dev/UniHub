@@ -12,18 +12,23 @@ async function runSingleFile(filePath) {
   try {
     // Read SQL file
     console.log(`[LOG migration] ========= Running migration from ${path.basename(filePath)}`);
-    const sql = fs.readFileSync(filePath, 'utf8');
+    let sql = fs.readFileSync(filePath, 'utf8');
     
     // Load environment variables
     const {
-      DB_HOST =  process.env.DB_HOST,
-      DB_USER =  process.env.DB_USER,
-      DB_PASSWORD =  process.env.DB_PASSWORD,
-      DB_NAME =  process.env.DB_NAME,
-      DB_PORT =  process.env.DB_PORT,
+      DB_HOST = process.env.DB_HOST,
+      DB_USER = process.env.DB_USER,
+      DB_PASSWORD = process.env.DB_PASSWORD,
+      DB_NAME = process.env.DB_NAME,
+      DB_PORT = process.env.DB_PORT,
     } = process.env;
     
     console.log(`[LOG migration] ========= Connecting to database ${DB_NAME} at ${DB_HOST}`);
+    
+    // Remove or replace any USE statements in the SQL file
+    // This ensures we don't use hardcoded database names
+    sql = sql.replace(/USE\s+`?[a-zA-Z0-9_]+`?;?/gi, '');
+    sql = sql.replace(/DATABASE\(\)/gi, `'${DB_NAME}'`);
     
     // Get database connection with multipleStatements option
     const connection = await mysql.createConnection({

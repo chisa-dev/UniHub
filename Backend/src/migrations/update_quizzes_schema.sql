@@ -1,5 +1,5 @@
 -- Update quizzes table schema to ensure all required columns exist
-USE unihub_db;
+
 
 -- Add is_public column if it doesn't exist
 SET @columnExists = 0;

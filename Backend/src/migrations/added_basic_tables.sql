@@ -18,7 +18,7 @@
 --
 -- Table structure for table `calendar_events`
 --
-USE `unihub_db`;
+
 DROP TABLE IF EXISTS `calendar_events`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;

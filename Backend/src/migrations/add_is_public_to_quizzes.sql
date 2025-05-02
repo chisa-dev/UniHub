@@ -1,5 +1,5 @@
 -- Add is_public column to quizzes table if it doesn't exist
-USE unihub_db;
+
 
 -- Check if column exists and add it if not
 SET @columnExists = 0;

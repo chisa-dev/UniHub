@@ -1,5 +1,5 @@
 -- Add the answers column to quiz_attempts table if it doesn't exist
-USE unihub_db;
+
 
 -- Check if column exists and add it if not
 SET @columnExists = 0;

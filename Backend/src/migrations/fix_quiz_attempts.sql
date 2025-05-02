@@ -1,5 +1,5 @@
 -- Fix quiz_attempts table schema
-USE unihub_db;
+
 
 -- 1. Make sure answers column exists and has correct type
 SET @columnExists = 0;
