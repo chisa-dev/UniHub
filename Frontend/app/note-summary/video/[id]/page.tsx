@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { PiArrowLeft, PiDownload, PiShare, PiThumbsUp, PiBookmark, PiChatText } from "react-icons/pi";
 
 type VideoData = {
@@ -60,11 +60,11 @@ const mockVideos: Record<string, VideoData> = {
   }
 };
 
-export default function VideoPage({ params }: { params: Promise<{ id: string }> }) {
+export default function VideoPage() {
+  const params = useParams();
+  const videoId = params?.id as string;
   const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
-  // Use React.use to unwrap the params Promise
-  const { id } = React.use(params);
   const [video, setVideo] = useState<VideoData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
@@ -76,10 +76,10 @@ export default function VideoPage({ params }: { params: Promise<{ id: string }> 
     // In a real implementation, this would be an API call
     setIsLoading(true);
     setTimeout(() => {
-      setVideo(mockVideos[id] || null);
+      setVideo(mockVideos[videoId] || null);
       setIsLoading(false);
     }, 500); // Simulate loading time
-  }, [id]);
+  }, [videoId]);
 
   // Handle video play/pause
   const togglePlayPause = () => {
@@ -253,7 +253,7 @@ export default function VideoPage({ params }: { params: Promise<{ id: string }> 
               <h3 className="font-medium mb-4">Related Videos</h3>
               <div className="space-y-4">
                 {Object.values(mockVideos)
-                  .filter(v => v.id !== id)
+                  .filter(v => v.id !== videoId)
                   .map((video) => (
                     <div 
                       key={video.id} 

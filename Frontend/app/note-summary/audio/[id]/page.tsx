@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { 
   PiArrowLeft, 
   PiDownload, 
@@ -92,11 +92,11 @@ const mockAudios: Record<string, AudioData> = {
   }
 };
 
-export default function AudioPage({ params }: { params: Promise<{ id: string }> }) {
+export default function AudioPage() {
+  const params = useParams();
+  const audioId = params?.id as string;
   const router = useRouter();
   const audioRef = useRef<HTMLAudioElement>(null);
-  // Use React.use to unwrap the params Promise
-  const { id } = React.use(params);
   const [audio, setAudio] = useState<AudioData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLiked, setIsLiked] = useState(false);
@@ -112,10 +112,10 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
     // In a real implementation, this would be an API call
     setIsLoading(true);
     setTimeout(() => {
-      setAudio(mockAudios[id] || null);
+      setAudio(mockAudios[audioId] || null);
       setIsLoading(false);
     }, 500); // Simulate loading time
-  }, [id]);
+  }, [audioId]);
 
   useEffect(() => {
     if (!audioRef.current) return;
@@ -453,7 +453,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
               <h3 className="font-medium mb-4">Related Audio Explanations</h3>
               <div className="space-y-4">
                 {Object.values(mockAudios)
-                  .filter(a => a.id !== id)
+                  .filter(a => a.id !== audioId)
                   .map((audio) => (
                     <div 
                       key={audio.id} 

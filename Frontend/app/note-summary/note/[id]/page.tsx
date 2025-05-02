@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -48,9 +48,10 @@ const MarkdownComponents = {
   td: (props: any) => <td className="px-3 py-2 whitespace-nowrap text-sm" {...props} />,
 };
 
-export default function NotePage({ params }: { params: Promise<{ id: string }> }) {
+export default function NotePage() {
+  const params = useParams();
+  const noteId = params?.id as string;
   const router = useRouter();
-  const { id: noteId } = React.use(params);
   const [note, setNote] = useState<Note | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
