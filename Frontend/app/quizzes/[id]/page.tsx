@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { quizzesService } from '../quizzes.service';
 import { QuizWithQuestions, QuizQuestion, QuizAnswers, QuizAttemptResult } from '../types';
 import { 
@@ -27,8 +27,9 @@ import {
   PiListChecks
 } from "react-icons/pi";
 
-export default function QuizDetailsPage({ params }: { params: { id: string } }) {
-  const quizId = params.id;
+export default function QuizDetailsPage() {
+  const params = useParams();
+  const quizId = params?.id as string;
   
   const router = useRouter();
   const [quiz, setQuiz] = useState<QuizWithQuestions | null>(null);

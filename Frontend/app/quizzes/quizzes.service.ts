@@ -1,14 +1,19 @@
 import { API_ENDPOINTS } from '@/config/apiConfig';
 import { 
   CreateQuizParams, 
-  Quiz, 
   QuizAnswers, 
   QuizAttempt, 
   QuizAttemptResult, 
   QuizListResponse, 
   QuizWithQuestions, 
-  Topic 
+  Topic
 } from './types';
+
+// Import Quiz directly
+import type { Quiz } from './types';
+
+// Re-export Quiz for use in other components
+export type { Quiz } from './types';
 
 export interface QuizzesResponse {
   quizzes: Quiz[];
@@ -359,5 +364,3 @@ class QuizzesService {
 }
 
 export const quizzesService = new QuizzesService(); 
-
-export { Quiz };
