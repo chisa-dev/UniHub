@@ -11,7 +11,7 @@ const options = {
     },
     servers: [
       {
-        url: `${process.env.API_URL || 'http://localhost:' + (process.env.PORT || '3000')}${process.env.API_PREFIX || '/api'}`,
+        url: `${process.env.API_URL }${process.env.API_PREFIX || '/api'}`,
         description: process.env.API_SERVER_DESCRIPTION || 'Development server',
       },
     ],

@@ -79,7 +79,7 @@ const swaggerOptions = {
     },
     servers: [
       {
-        url: process.env.API_URL || (process.env.NODE_ENV === 'production' ? 'https://uni-hub-backend.vercel.app/api' : 'http://localhost:3000/api'),
+        url: `${process.env.API_URL }${process.env.API_PREFIX || '/api'}`,
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
     ],
