@@ -19,8 +19,8 @@ import { Topic, topicsService } from "../topicsService";
 import { getStatistics, TopicProgress } from "@/app/notes-materials/statistics.service";
 import { authService } from "@/app/auth/authService";
 import { getMaterialsByTopic } from "@/app/notes-materials/materials.service";
-import { getNotesByTopic, Note, NotesResponse } from "@/app/notes-materials/notes.service";
-import { getQuizzesByTopic, Quiz, QuizzesResponse } from "@/app/quizzes/quizzes.service";
+import { getNotesByTopic } from "@/app/notes-materials/notes.service";
+import { getQuizzesByTopic } from "@/app/quizzes/quizzes.service";
 import EditTopicDialog from "@/components/modals/EditTopicDialog";
 import { API_ENDPOINTS } from '@/config/apiConfig';
 
@@ -35,6 +35,38 @@ interface Material {
   createdAt: string;
   updatedAt: string;
   fileUrl: string;
+}
+
+interface Note {
+  id: string;
+  title: string;
+  topic: string;
+  topicId: string;
+  date: string;
+  content: string;
+  readTime: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
+
+interface Quiz {
+  id: string;
+  title: string;
+  description: string;
+  questions: any;
+  difficulty: string;
+  time_limit: string | null;
+  topic_id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
+  is_ai_generated: number;
+  is_public: number;
+  topic_title: string;
+  creator_name: string;
+  question_count: number;
+  attempt_count: number;
 }
 
 const TopicDetail = () => {
@@ -60,6 +92,8 @@ const TopicDetail = () => {
   
   // Function to fetch all topic data - wrapped in useCallback to avoid dependency issues
   const fetchTopicData = useCallback(async () => {
+    if (!id) return;
+    
     try {
       setIsLoading(true);
       
@@ -86,30 +120,63 @@ const TopicDetail = () => {
         setIsStarred(false);
       }
       
-      // Fetch notes for the topic
+      // Fetch notes for the topic using proper API endpoint
       try {
-        const notesResponse = await getNotesByTopic(id as string);
-        const notesData = Array.isArray(notesResponse.notes) 
-          ? notesResponse.notes 
-          : notesResponse.notes ? [notesResponse.notes] : [];
-        setNotes(notesData);
+        const response = await fetch(`${API_ENDPOINTS.NOTES.BY_TOPIC(id as string)}?page=1&limit=10`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch notes');
+        }
+        
+        const notesData = await response.json();
+        setNotes(notesData.notes || []);
       } catch (notesError) {
         console.error('[LOG topic_detail] ========= Error fetching notes:', notesError);
         setNotes([]);
       }
       
-      // Fetch quizzes for the topic
+      // Fetch quizzes for the topic using proper API endpoint
       try {
-        const quizzesResponse = await getQuizzesByTopic(id as string);
-        setQuizzes(quizzesResponse.quizzes || []);
+        const response = await fetch(`${API_ENDPOINTS.QUIZZES.BY_TOPIC(id as string)}?page=1&limit=10`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch quizzes');
+        }
+        
+        const quizzesData = await response.json();
+        setQuizzes(quizzesData.quizzes || []);
       } catch (quizzesError) {
         console.error('[LOG topic_detail] ========= Error fetching quizzes:', quizzesError);
         setQuizzes([]);
       }
       
-      // Fetch materials for the topic
+      // Fetch materials for the topic using proper API endpoint
       try {
-        const materialsData = await getMaterialsByTopic(id as string);
+        const response = await fetch(API_ENDPOINTS.MATERIALS.BY_TOPIC(id as string), {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch materials');
+        }
+        
+        const materialsData = await response.json();
         setMaterials(materialsData || []);
       } catch (materialsError) {
         console.error('[LOG topic_detail] ========= Error fetching materials:', materialsError);
@@ -167,9 +234,25 @@ const TopicDetail = () => {
     fetchTopicData();
   };
   
+  // Handle note click
+  const handleNoteClick = (noteId: string) => {
+    router.push(`/note-summary/note/${noteId}`);
+  };
+  
+  // Handle quiz click
+  const handleQuizClick = (quizId: string) => {
+    router.push(`/quizzes/${quizId}`);
+  };
+  
+  // Handle material click
+  const handleMaterialClick = (material: Material) => {
+    // Open material in a new tab
+    window.open(material.fileUrl, '_blank', 'noopener,noreferrer');
+  };
+  
   if (isLoading) {
     return (
-      <div className="container py-8 flex justify-center items-center min-h-[400px]">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8 flex justify-center items-center min-h-[400px]">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-primaryColor border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p>Loading topic data...</p>
@@ -180,7 +263,7 @@ const TopicDetail = () => {
   
   if (error || !topic) {
     return (
-      <div className="container py-8">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
         <div className="bg-errorColor/10 text-errorColor p-4 rounded-xl">
           <h2 className="font-semibold mb-2">Error</h2>
           <p>{error || 'Failed to load topic data'}</p>
@@ -196,7 +279,7 @@ const TopicDetail = () => {
   }
   
   return (
-    <div className="container py-8">
+    <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-8">
       {/* Edit Topic Dialog */}
       {topic && (
         <EditTopicDialog
@@ -238,7 +321,7 @@ const TopicDetail = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
         <div className="lg:col-span-3">
-          <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20">
+          <div className="bg-white p-5 rounded-xl border border-primaryColor/20">
             {/* Progress bar */}
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
@@ -303,7 +386,7 @@ const TopicDetail = () => {
                   <h3 className="font-medium">My Notes</h3>
                   <button 
                     className="text-xs bg-primaryColor text-white py-1 px-3 rounded-lg flex items-center gap-1"
-                    onClick={() => router.push(`/notes-materials?topicId=${id}`)}
+                    onClick={() => router.push(`/note-summary?topicId=${id}`)}
                   >
                     <PiPencilLine />
                     <span>New Note</span>
@@ -316,7 +399,7 @@ const TopicDetail = () => {
                       <div 
                         key={note.id} 
                         className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group cursor-pointer"
-                        onClick={() => router.push(`/notes-materials?noteId=${note.id}`)}
+                        onClick={() => handleNoteClick(note.id)}
                       >
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-primaryColor/10 rounded-lg">
@@ -329,7 +412,13 @@ const TopicDetail = () => {
                             </p>
                           </div>
                         </div>
-                        <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
+                        <button 
+                          className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleNoteClick(note.id);
+                          }}
+                        >
                           <PiCaretRight className="text-primaryColor" />
                         </button>
                       </div>
@@ -363,7 +452,7 @@ const TopicDetail = () => {
                       <div 
                         key={quiz.id}
                         className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group cursor-pointer"
-                        onClick={() => router.push(`/quizzes/${quiz.id}`)}
+                        onClick={() => handleQuizClick(quiz.id)}
                       >
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-primaryColor/10 rounded-lg">
@@ -382,7 +471,13 @@ const TopicDetail = () => {
                               Attempted
                             </span>
                           )}
-                          <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
+                          <button 
+                            className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleQuizClick(quiz.id);
+                            }}
+                          >
                             <PiCaretRight className="text-primaryColor" />
                           </button>
                         </div>
@@ -416,7 +511,8 @@ const TopicDetail = () => {
                     materials.map((material) => (
                       <div 
                         key={material.id}
-                        className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group"
+                        className="p-3 border border-primaryColor/20 rounded-lg hover:border-primaryColor/40 flex items-center justify-between group cursor-pointer"
+                        onClick={() => handleMaterialClick(material)}
                       >
                         <div className="flex items-center gap-3">
                           <div className="p-2 bg-primaryColor/10 rounded-lg">
@@ -435,10 +531,17 @@ const TopicDetail = () => {
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="text-xs text-primaryColor hover:underline opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={(e) => e.stopPropagation()}
                           >
                             Download
                           </a>
-                          <button className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity">
+                          <button 
+                            className="p-1 opacity-0 group-hover:opacity-100 rounded-lg hover:bg-primaryColor/10 transition-opacity"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMaterialClick(material);
+                            }}
+                          >
                             <PiCaretRight className="text-primaryColor" />
                           </button>
                         </div>
@@ -456,7 +559,7 @@ const TopicDetail = () => {
         </div>
         
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
+          <div className="bg-white p-5 rounded-xl border border-primaryColor/20 mb-6">
             <h3 className="font-medium mb-4">Study Stats</h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -513,17 +616,16 @@ const TopicDetail = () => {
             <h3 className="font-medium mb-3">Recommended Actions</h3>
             <div className="space-y-2">
               <button 
-                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40 text-left"
+                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white border border-primaryColor/20 hover:border-primaryColor/40 text-left"
                 onClick={() => router.push(`/quizzes/create?topicId=${id}`)}
               >
                 <PiListChecks className="text-primaryColor" />
                 <span className="text-sm">Take a practice quiz</span>
               </button>
-   
               
               <button 
-                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40 text-left"
-                onClick={() => router.push(`/notes-materials?topicId=${id}`)}
+                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white border border-primaryColor/20 hover:border-primaryColor/40 text-left"
+                onClick={() => router.push(`/note-summary?topicId=${id}`)}
               >
                 <PiFileText className="text-primaryColor" />
                 <span className="text-sm">Create new notes</span>

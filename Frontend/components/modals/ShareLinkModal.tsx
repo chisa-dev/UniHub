@@ -13,7 +13,7 @@ function ShareLinkModal() {
       </p>
       <div className={"w-full pt-3"}>
         <p className="text-xs text-n400 -mb-2.5 pl-6">
-          <span className="bg-white dark:bg-n0">Response Style</span>
+          <span className="bg-white">Response Style</span>
         </p>
         <div className="border border-primaryColor/20 rounded-xl py-2 pl-5 pr-2 flex justify-between items-center ">
           <p className="text-n100 text-sm ">{shareLink}...</p>

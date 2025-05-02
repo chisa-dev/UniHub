@@ -39,7 +39,7 @@ function UpgradeModal() {
         </div>
       </div>
       <div className="px-4 sm:px-[60px] pb-6 sm:pb-10  ">
-        <div className="bg-white dark:bg-n0 relative z-10 rounded-xl">
+        <div className="bg-white relative z-10 rounded-xl">
           <div className="bg-secondaryColor/5 border border-secondaryColor/30 rounded-xl p-3 sm:py-5 sm:px-6 -mt-12">
             <p className="text-xl sm:text-2xl font-semibold">Premium</p>
             <p className="text-n700 pt-2 max-sm:text-sm dark:text-n30">
@@ -66,7 +66,7 @@ function UpgradeModal() {
                 </div>
                 <p className="text-sm font-medium pb-2">{title}</p>
                 <div className="flex justify-between items-center ">
-                  <p className="font-semibold text-n700 dark:text-n30">
+                  <p className="font-semibold text-n700">
                     {price}
                   </p>
                   {idx === 1 && (

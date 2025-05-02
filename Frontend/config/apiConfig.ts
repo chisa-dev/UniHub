@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
     LIST: `${API_BASE_URL}/notes`,
     GET: (id: string) => `${API_BASE_URL}/notes/${id}`,
     CREATE: `${API_BASE_URL}/notes`,
+    CREATE_RAG: `${API_BASE_URL}/rag/notes`,
     UPDATE: (id: string) => `${API_BASE_URL}/notes/${id}`,
     DELETE: (id: string) => `${API_BASE_URL}/notes/${id}`,
     BY_TOPIC: (topicId: string) => `${API_BASE_URL}/notes/topic/${topicId}`,
@@ -32,9 +33,12 @@ export const API_ENDPOINTS = {
     LIST: `${API_BASE_URL}/quizzes`,
     GET: (id: string) => `${API_BASE_URL}/quizzes/${id}`,
     CREATE: `${API_BASE_URL}/quizzes`,
+    CREATE_RAG: `${API_BASE_URL}/quizzes/rag`,
     UPDATE: (id: string) => `${API_BASE_URL}/quizzes/${id}`,
     DELETE: (id: string) => `${API_BASE_URL}/quizzes/${id}`,
     BY_TOPIC: (topicId: string) => `${API_BASE_URL}/quizzes/topic/${topicId}`,
+    SUBMIT_ATTEMPT: (id: string) => `${API_BASE_URL}/quizzes/${id}/attempt`,
+    GET_ATTEMPTS: (id: string) => `${API_BASE_URL}/quizzes/${id}/attempts`,
   },
   
   RAG: {

@@ -73,7 +73,7 @@ function UserModal() {
         />
       </button>
       <div
-        className={`absolute top-12 right-0 bg-white dark:bg-n0 border border-primaryColor/30 p-3 rounded-xl text-sm duration-300 z-30 text-n500 dark:text-n30 w-[240px] ${
+        className={`absolute top-12 right-0 bg-white border border-primaryColor/30 p-3 rounded-xl text-sm duration-300 z-30 text-n500 dark:text-n30 w-[240px] ${
           modal
             ? "visible translate-y-0 opacity-100"
             : "invisible translate-y-2 opacity-0"

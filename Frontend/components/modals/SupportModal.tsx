@@ -18,7 +18,7 @@ function SupportModal() {
             className={`flex justify-start items-center gap-2 xl:gap-2 py-2 pl-2 flex-1  border  rounded-full cursor-pointer ${
               activeMenu === idx
                 ? " border-primaryColor bg-primaryColor"
-                : "border-primaryColor/30 bg-white dark:bg-n0"
+                : "border-primaryColor/30 bg-white"
             }`}
             onClick={() => setActiveMenu(idx)}
           >
@@ -84,7 +84,7 @@ function SupportModal() {
       {activeMenu === 1 && (
         <div className="mt-6 bg-primaryColor/5 border border-primaryColor/30 rounded-xl p-5">
           <div className="border-b border-primaryColor/20 w-full pb-5">
-            <p className="font-medium text-n700 dark:text-n30 ">Change Log</p>
+            <p className="font-medium text-n700 ">Change Log</p>
             <p className="text-xs pt-2">
               Track our latest updates and improvements.
             </p>
@@ -92,7 +92,7 @@ function SupportModal() {
           <div className="flex flex-col gap-5 pt-5">
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   GPT-4o
                 </p>
                 <p className="text-xs font-medium border border-secondaryColor/30 bg-secondaryColor/5 rounded-full py-1 px-3 text-secondaryColor">
@@ -112,7 +112,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   2.0v Flash Thinking Experimental
                 </p>
                 <p className="text-xs font-medium border border-infoColor/30 bg-infoColor/5 rounded-full py-1 px-3 text-infoColor">
@@ -128,7 +128,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   1.9.1 Thinking Experimental with apps
                 </p>
                 <p className="text-xs font-medium border border-warningColor/30 bg-warningColor/5 rounded-full py-1 px-3 text-yellow-700">
@@ -141,7 +141,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   1.9v Flash
                 </p>
               </div>
@@ -151,7 +151,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   1.5v Flash
                 </p>
               </div>
@@ -165,7 +165,7 @@ function SupportModal() {
       {activeMenu === 2 && (
         <div className="mt-6 bg-primaryColor/5 border border-primaryColor/30 rounded-xl p-5">
           <div className="border-b border-primaryColor/20 w-full pb-5">
-            <p className="font-medium text-n700 dark:text-n30">
+            <p className="font-medium text-n700">
               Product Roadmap
             </p>
             <p className="text-xs pt-2">
@@ -175,7 +175,7 @@ function SupportModal() {
           <div className="flex flex-col gap-5 pt-5">
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   2.1v Flash
                 </p>
                 <p className="text-xs font-medium border border-infoColor/30 bg-infoColor/5 rounded-full py-1 px-3 text-infoColor">
@@ -195,7 +195,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   2.2v Flash
                 </p>
                 <p className="text-xs font-medium border border-warningColor/30 bg-warningColor/5 rounded-full py-1 px-3 text-yellow-700">
@@ -213,7 +213,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   2.3v Flash
                 </p>
                 <p className="text-xs font-medium border border-warningColor/30 bg-warningColor/5 rounded-full py-1 px-3 text-yellow-700">
@@ -235,7 +235,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   2.4v Flash
                 </p>
                 <p className="text-xs font-medium border border-warningColor/30 bg-warningColor/5 rounded-full py-1 px-3 text-yellow-700">
@@ -257,7 +257,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   2.5v Flash
                 </p>
                 <p className="text-xs font-medium border border-secondaryColor/30 bg-secondaryColor/5 rounded-full py-1 px-3 text-secondaryColor">
@@ -280,7 +280,7 @@ function SupportModal() {
       {activeMenu === 3 && (
         <div className="mt-6  border border-primaryColor/30 rounded-xl p-5">
           <div className="border-b border-primaryColor/20 w-full pb-5">
-            <p className="font-medium text-n700 dark:text-n30">
+            <p className="font-medium text-n700">
               Contact Support
             </p>
             <p className="text-xs pt-2">
@@ -325,7 +325,7 @@ function SupportModal() {
       {activeMenu === 4 && (
         <div className="mt-6 bg-primaryColor/5 border border-primaryColor/30 rounded-xl p-5">
           <div className="border-b border-primaryColor/20 w-full pb-5">
-            <p className="font-medium text-n700 dark:text-n30">
+            <p className="font-medium text-n700">
               Privacy Policy
             </p>
             <p className="text-xs pt-2">
@@ -335,7 +335,7 @@ function SupportModal() {
           <div className="flex flex-col gap-5 pt-5">
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Data Collection
                 </p>
               </div>
@@ -356,7 +356,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Data Usage
                 </p>
               </div>
@@ -376,7 +376,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Data Protection
                 </p>
               </div>
@@ -395,7 +395,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Your Rights
                 </p>
               </div>
@@ -417,7 +417,7 @@ function SupportModal() {
       {activeMenu === 5 && (
         <div className="mt-6 bg-primaryColor/5 border border-primaryColor/30 rounded-xl p-5">
           <div className="border-b border-primaryColor/20 w-full pb-5">
-            <p className="font-medium text-n700 dark:text-n30">
+            <p className="font-medium text-n700">
               Terms of Service
             </p>
             <p className="text-xs pt-2">
@@ -427,7 +427,7 @@ function SupportModal() {
           <div className="flex flex-col gap-5 pt-5">
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Acceptance of Terms
                 </p>
               </div>
@@ -440,7 +440,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Use License
                 </p>
               </div>
@@ -459,7 +459,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   User Responsibilities
                 </p>
               </div>
@@ -478,7 +478,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Service Modifications
                 </p>
               </div>
@@ -491,7 +491,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Intellectual Property
                 </p>
               </div>
@@ -517,7 +517,7 @@ function SupportModal() {
             </div>
             <div className="">
               <div className="flex justify-between items-center">
-                <p className="text-sm font-medium text-n700 dark:text-n30">
+                <p className="text-sm font-medium text-n700">
                   Limitation of Liability
                 </p>
               </div>

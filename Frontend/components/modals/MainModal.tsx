@@ -35,7 +35,7 @@ function MainModal() {
       }`}
     >
       <div
-        className={`bg-white dark:bg-n0 rounded-xl  w-full ${
+        className={`bg-white rounded-xl  w-full ${
           modalName === "Upgrade"
             ? " overflow-hidden sm:w-[600px]"
             : modalName === "Support Modal"

@@ -79,23 +79,23 @@ function ShareImageModal() {
       <div className=" border-y border-primaryColor/30 grid grid-cols-12">
         <div className=" max-sm:border-b sm:border-r border-primaryColor/30 pr-3 md:pr-6 py-2 sm:py-6 col-span-12 sm:col-span-6 lg:col-span-4">
           <p className="text-xs">Title</p>
-          <p className="pt-2 text-sm font-medium text-n700 dark:text-n30">
+          <p className="pt-2 text-sm font-medium text-n700">
             Create a 4 image for this prompt
           </p>
         </div>
         <div className=" border-r border-primaryColor/30 px-3 md:px-6 py-2 sm:py-6 col-span-4 sm:col-span-2">
           <p className="text-xs">Quantity</p>
-          <p className="pt-2 text-sm font-medium text-n700 dark:text-n30">4</p>
+          <p className="pt-2 text-sm font-medium text-n700">4</p>
         </div>
         <div className=" border-r border-primaryColor/30 px-3 md:px-6 py-2 sm:py-6 col-span-4 sm:col-span-2">
           <p className="text-xs">Size</p>
-          <p className="pt-2 text-sm font-medium text-n700 dark:text-n30">
+          <p className="pt-2 text-sm font-medium text-n700">
             320*320
           </p>
         </div>
         <div className=" px-3 md:px-6 py-2 sm:py-6 col-span-4 sm:col-span-2">
           <p className="text-xs">AI model</p>
-          <p className="pt-2 text-sm font-medium text-n700 dark:text-n30">
+          <p className="pt-2 text-sm font-medium text-n700">
             UniHub
           </p>
         </div>

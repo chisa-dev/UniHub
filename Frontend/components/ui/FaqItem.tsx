@@ -18,13 +18,13 @@ function FaqItem({ question, answer, idx, show, setShow }: FaqItemProps) {
       className={`cursor-pointer rounded-xl border ${
         show === idx
           ? "bg-primaryColor border-primaryColor"
-          : "border-primaryColor/30 bg-white dark:bg-n0"
+          : "border-primaryColor/30 bg-white"
       } px-6 py-3 duration-300 `}
     >
       <div className="flex items-center justify-between">
         <h6
           className={`font-medium ${
-            show === idx ? "text-white " : "text-n700 dark:text-n30"
+            show === idx ? "text-white " : "text-n700"
           } duration-300`}
         >
           {question}

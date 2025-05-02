@@ -159,7 +159,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
       icon: <PiExam size={20} className="text-primaryColor" /> 
     },
     { 
-      path: "/tutor-me", 
+      path: "/note-summary", 
       name: t('sidebar.tutorMe'), 
       icon: <PiChalkboardTeacher size={20} className="text-primaryColor" /> 
     },
@@ -172,7 +172,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
 
   return (
     <div
-      className={`w-[312px] bg-white dark:bg-n0 border-r border-primaryColor/20 h-dvh overflow-hidden duration-500 max-lg:absolute z-40 top-0 left-0 ${
+      className={`w-[312px] bg-white border-r border-primaryColor/20 h-dvh overflow-hidden duration-500 max-lg:absolute z-40 top-0 left-0 ${
         showSidebar
           ? "visible opacity-100"
           : "max-lg:invisible max-lg:opacity-0 ml-[-312px]"
@@ -185,7 +185,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
           <div className="flex justify-between items-center">
             <div className="flex justify-start items-center gap-1.5">
               <Image src={fav} alt="UniHub Logo" />
-              <span className="text-2xl font-semibold text-n700 dark:text-n30">
+              <span className="text-2xl font-semibold text-n700">
                 UniHub
               </span>
             </div>
@@ -332,7 +332,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
         {/* Bottom Section */}
         <div className="space-y-4">
           <div className="flex flex-col gap-1 justify-start items-start">
-            <button
+            {/* <button
               className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
               onClick={() => modalOpen("Support Modal")}
             >
@@ -341,7 +341,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                 <span className="text-sm">{t('sidebar.help')}</span>
               </span>
               <span className="block size-1 rounded-full bg-successColor"></span>
-            </button>
+            </button> */}
             <button
               className="w-full flex justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
               onClick={() => modalOpen("Settings")}
@@ -369,7 +369,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
           {/* Add Topic Modal */}
           {showAddTopicModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <div className="bg-white dark:bg-n0 rounded-xl p-6 max-w-md w-full">
+              <div className="bg-white rounded-xl p-6 max-w-md w-full">
                 <AddTopicModal 
                   onClose={() => setShowAddTopicModal(false)} 
                   onTopicAdded={fetchTopics}
@@ -381,7 +381,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
           {/* Delete Topic Dialog */}
           {showDeleteDialog && topicToDelete && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-              <div className="bg-white dark:bg-n0 rounded-xl max-w-sm w-full">
+              <div className="bg-white rounded-xl max-w-sm w-full">
                 <DeleteTopicDialog
                   topicId={topicToDelete.id}
                   topicTitle={topicToDelete.title}

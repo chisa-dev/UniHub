@@ -25,7 +25,7 @@ function BotImageReply({ show }: { show: boolean }) {
               </div>
               <button
                 onClick={() => modalOpen("Share Image")}
-                className="p-2 rounded-md bg-white dark:bg-n0"
+                className="p-2 rounded-md bg-white"
               >
                 <PiDownloadSimple />
               </button>

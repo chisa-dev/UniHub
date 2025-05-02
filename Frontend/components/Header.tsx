@@ -40,7 +40,7 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
 
   return (
     <div className={`px-6 py-3 flex justify-between items-center w-full sticky top-0 left-0 right-0 z-30 ${
-      isAssistancePage ? 'bg-transparent backdrop-blur-sm' : 'bg-white dark:bg-n0'
+      isAssistancePage ? 'bg-transparent backdrop-blur-sm' : 'bg-white'
     }`}>
       <div className="flex justify-start items-center gap-2">
         <button
@@ -66,7 +66,7 @@ function Header({ showSidebar, setShowSidebar }: HeaderProps) {
           </button>
           
           {showLanguageDropdown && (
-            <div className="absolute top-full right-0 mt-1 bg-white dark:bg-n0 border border-primaryColor/20 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
+            <div className="absolute top-full right-0 mt-1 bg-white border border-primaryColor/20 rounded-lg shadow-lg py-1 min-w-[120px] z-50">
               {languages.map((language) => (
                 <button
                   key={language.id}

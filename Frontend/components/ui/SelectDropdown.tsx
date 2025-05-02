@@ -16,7 +16,7 @@ function SelectDropdown({ options, title, placeholder }: SelectDropdownProps) {
   return (
     <div>
       <p className="text-xs text-n400 -mb-2.5 pl-6">
-        <span className="bg-white dark:bg-n0 px-1 relative z-10">{title}</span>
+        <span className="bg-white px-1 relative z-10">{title}</span>
       </p>
       <Select
         options={options}
@@ -28,7 +28,7 @@ function SelectDropdown({ options, title, placeholder }: SelectDropdownProps) {
                 ? "border-primaryColor/50 shadow-md"
                 : "border-primaryColor/30"
             }`,
-          menu: () => "bg-white dark:bg-n0 shadow-lg rounded-lg ",
+          menu: () => "bg-white shadow-lg rounded-lg ",
           option: ({ isFocused, isSelected }) =>
             ` ${
               isSelected

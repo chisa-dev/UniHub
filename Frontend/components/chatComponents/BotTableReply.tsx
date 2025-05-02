@@ -27,7 +27,7 @@ function BotTableReply({ show }: { show: boolean }) {
             <PiStarFill />
             <PiStarHalfFill />
           </div>
-          <p className="text-xs font-medium py-1 px-4 rounded-full border border-primaryColor/20 bg-white dark:bg-n0">
+          <p className="text-xs font-medium py-1 px-4 rounded-full border border-primaryColor/20 bg-white">
             4.85
           </p>
         </div>

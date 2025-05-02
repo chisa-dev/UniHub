@@ -118,7 +118,7 @@ const TopicsPage = () => {
           placeholder="Search topics..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full py-3 px-5 pl-12 text-sm rounded-xl border border-primaryColor/30 bg-white dark:bg-n0 focus:outline-none focus:ring-2 focus:ring-primaryColor"
+          className="w-full py-3 px-5 pl-12 text-sm rounded-xl border border-primaryColor/30 bg-white focus:outline-none focus:ring-2 focus:ring-primaryColor"
         />
         <PiMagnifyingGlass className="absolute left-4 top-3.5 text-lg text-primaryColor" />
       </div>
@@ -127,7 +127,7 @@ const TopicsPage = () => {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array(6).fill(0).map((_, index) => (
-            <div key={index} className="bg-white dark:bg-n0 p-4 rounded-xl border border-primaryColor/20 animate-pulse">
+            <div key={index} className="bg-white p-4 rounded-xl border border-primaryColor/20 animate-pulse">
               <div className="h-5 bg-gray-200 rounded mb-2 w-2/3"></div>
               <div className="h-4 bg-gray-200 rounded mb-3 w-full"></div>
               <div className="flex justify-between">
@@ -152,7 +152,7 @@ const TopicsPage = () => {
           {filteredTopics.map((topic) => (
             <div 
               key={topic.id}
-              className={`bg-white dark:bg-n0 p-4 rounded-xl border ${
+              className={`bg-white p-4 rounded-xl border ${
                 selectedTopicId === topic.id 
                   ? 'border-primaryColor' 
                   : 'border-primaryColor/20 hover:border-primaryColor/50'

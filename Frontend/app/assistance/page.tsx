@@ -241,7 +241,7 @@ const Assistance = () => {
           <div className="pb-6 flex-grow w-full max-w-[1070px] mx-auto">
             {/* Topic Selection - Only show if no topic is selected */}
             {!hasTopicSelected && !isFetching && (
-              <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 shadow-md mb-6">
+              <div className="bg-white p-5 rounded-xl border border-primaryColor/20 shadow-md mb-6">
                 <div className="flex items-center gap-3 mb-3">
                   <div className="p-2 rounded-full bg-primaryColor/10">
                     <Image src={logo} alt="UniHub Logo" width={24} height={24} />
@@ -309,7 +309,7 @@ const Assistance = () => {
             onSubmit={handleSendMessage}
             className="relative w-full"
           >
-            <div className="w-full bg-white dark:bg-n0 rounded-xl shadow-md border border-primaryColor/20 backdrop-blur-sm p-2">
+            <div className="w-full bg-white rounded-xl shadow-md border border-primaryColor/20 backdrop-blur-sm p-2">
               <textarea
                 ref={textareaRef}
                 className="w-full outline-none p-3 bg-transparent resize-none overflow-hidden min-h-[48px] max-h-[200px] text-sm"

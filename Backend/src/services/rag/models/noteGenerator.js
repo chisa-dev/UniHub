@@ -237,7 +237,7 @@ const generateNote = async ({ title, userGoal, materials = [], userId, topicId }
       }
       
       // Create system message
-      const systemMessage = `You are an expert educational note-generator. Create a comprehensive note based on the provided context from learning materials. 
+      const systemMessage = `You are an expert educational note-generator. Create a comprehensive, detailed and long note based on the provided context from learning materials. 
 Format the response as markdown. Include appropriate headings, lists, tables, and code blocks as needed.
 The note should be well-structured, informative, and tailored to the user's goal.
 DO NOT include any greetings, explanations, or conversation - ONLY return the note content.`;

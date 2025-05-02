@@ -17,7 +17,7 @@ Frontend/
 │   ├── topics/              # Topic management
 │   ├── notes-materials/     # Notes and study materials
 │   ├── tests-quizfetch/     # Quizzes and tests
-│   ├── tutor-me/            # Tutoring services
+│   ├── note-summary/            # Tutoring services
 │   ├── calendar/            # Calendar and scheduling
 │   ├── assistance/          # AI assistant
 │   ├── insights/            # Analytics and insights
@@ -106,7 +106,7 @@ Each feature has its own page component that composes smaller components:
 
 
 
-#### `TutorPage` (app/tutor-me/page.tsx)
+#### `TutorPage` (app/note-summary/page.tsx)
 - Facilitates tutoring sessions
 - Includes tutor list, session scheduler, and chat components
 

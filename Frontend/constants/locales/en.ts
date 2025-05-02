@@ -8,7 +8,7 @@ export const en = {
     testsQuizfetch: "Tests & Quiz",
     tutorMe: "Note Summary",
     audioRecap: "Audio Recap",
-    notesMaterials: "Notes and Materials",
+    notesMaterials: "Files and Materials",
     help: "Help",
     settings: "Settings"
   },

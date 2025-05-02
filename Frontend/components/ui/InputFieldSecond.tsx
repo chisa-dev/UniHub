@@ -27,7 +27,7 @@ function InputFieldSecond({
   return (
     <div className={className}>
       <p className="text-xs text-n400 -mb-2.5 pl-6">
-        <span className="bg-white dark:bg-n0 px-1">{title}</span>
+        <span className="bg-white px-1">{title}</span>
       </p>
       <div className={`border ${error ? 'border-errorColor' : 'border-primaryColor/20'} rounded-xl py-3 px-5 flex justify-between items-center gap-2`}>
         <input

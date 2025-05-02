@@ -43,19 +43,19 @@ function CustomDetailsModal() {
           <div className="flex justify-center items-center flex-col">
             <div className="flex justify-center items-center  text-lg font-medium gap-1">
               <PiStarFill className=" text-warningColor" />
-              <p className="text-n700  dark:text-n30">4.7</p>
+              <p className="text-n700">4.7</p>
             </div>
             <p className="text-xs pt-2">Ratings (20K+)</p>
           </div>
           <div className="flex justify-center items-center flex-col">
             <div className="flex justify-center items-center  text-lg font-medium gap-1">
-              <p className="text-n700  dark:text-n30">Productivity</p>
+              <p className="text-n700">Productivity</p>
             </div>
             <p className="text-xs pt-2">Category</p>
           </div>
           <div className="flex justify-center items-center flex-col">
             <div className="flex justify-center items-center  text-lg font-medium gap-1">
-              <p className="text-n700  dark:text-n30">600K+</p>
+              <p className="text-n700">600K+</p>
             </div>
             <p className="text-xs pt-2">Conversations</p>
           </div>
@@ -63,7 +63,7 @@ function CustomDetailsModal() {
       </div>
 
       <div className="border-y border-primaryColor/30 py-6">
-        <p className="text-lg font-medium text-n700 dark:text-n30">
+        <p className="text-lg font-medium text-n700">
           Conversation Starters
         </p>
         <div className="grid grid-cols-2 gap-3 pt-4">
@@ -74,7 +74,7 @@ function CustomDetailsModal() {
             >
               <p>{item}</p>
 
-              <span className="text-primaryColor text-xl p-1 border border-primaryColor/30 rounded-md opacity-0 group-hover:opacity-100 duration-300 bg-white dark:bg-n0">
+              <span className="text-primaryColor text-xl p-1 border border-primaryColor/30 rounded-md opacity-0 group-hover:opacity-100 duration-300 bg-white">
                 <PiChatCircleText />
               </span>
             </div>
@@ -82,7 +82,7 @@ function CustomDetailsModal() {
         </div>
       </div>
       <div className="border-b border-primaryColor/30 py-6">
-        <p className="text-lg font-medium text-n700 dark:text-n30">
+        <p className="text-lg font-medium text-n700">
           Capabilities
         </p>
         <div className="flex justify-start items-center gap-2 md:gap-7 pt-4">
@@ -101,7 +101,7 @@ function CustomDetailsModal() {
         </div>
       </div>
       <div className="border-b border-primaryColor/30 py-6">
-        <p className="text-lg font-medium text-n700 dark:text-n30">Ratings</p>
+        <p className="text-lg font-medium text-n700">Ratings</p>
         <div className="flex flex-col gap-2 pt-4">
           <div className="flex justify-start items-center gap-3 sm:gap-5">
             <div className="flex justify-start items-center gap-1">
@@ -156,7 +156,7 @@ function CustomDetailsModal() {
         </div>
       </div>
       <div className=" py-6">
-        <p className="text-lg font-medium text-n700 dark:text-n30">
+        <p className="text-lg font-medium text-n700">
           More Related
         </p>
         <div className="flex flex-col gap-4 pt-4">

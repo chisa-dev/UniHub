@@ -23,7 +23,7 @@ function SettingsModal() {
             className={`flex justify-start items-center gap-2 xl:gap-2 py-2 pl-2 pr-6  border  rounded-full cursor-pointer ${
               activeMenu === idx
                 ? " border-primaryColor bg-primaryColor"
-                : "border-primaryColor/30 bg-white dark:bg-n0"
+                : "border-primaryColor/30 bg-white"
             }`}
             onClick={() => setActiveMenu(idx)}
           >
@@ -98,7 +98,7 @@ function SettingsModal() {
               </div>
             </div>
 
-            <div className="p-4 border border-primaryColor/30 rounded-xl bg-white dark:bg-n0">
+            <div className="p-4 border border-primaryColor/30 rounded-xl bg-white">
               <p className="text-n700 font-medium  dark:text-n30 text-sm pb-2">
                 More Style & Format
               </p>
@@ -209,7 +209,7 @@ function SettingsModal() {
                 </div>
               </div>
 
-              <div className="p-4 border border-primaryColor/30 rounded-xl bg-white dark:bg-n0">
+              <div className="p-4 border border-primaryColor/30 rounded-xl bg-white">
                 <p className="text-n700 font-medium  dark:text-n30 text-sm">
                   More Security
                 </p>
@@ -221,7 +221,7 @@ function SettingsModal() {
                 />
                 <div className="col-span-12">
                   <p className="text-xs text-n400 -mb-2.5 pl-6">
-                    <span className="bg-white dark:bg-n0 px-1">API Key</span>
+                    <span className="bg-white px-1">API Key</span>
                   </p>
                   <div className="border border-primaryColor/20 rounded-xl py-2 pl-5 pr-2 flex justify-between items-center gap-2 ">
                     <input

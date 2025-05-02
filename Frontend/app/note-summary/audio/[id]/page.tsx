@@ -281,7 +281,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
+          <div className="bg-white p-5 rounded-xl border border-primaryColor/20 mb-6">
             <audio 
               ref={audioRef} 
               src={audio.audioUrl} 
@@ -437,7 +437,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
         
         <div className="lg:col-span-1">
           <div className="sticky top-4">
-            <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
+            <div className="bg-white p-5 rounded-xl border border-primaryColor/20 mb-6">
               <h3 className="font-medium mb-4">Ask a Question</h3>
               <textarea 
                 placeholder="Have a question about this explanation? Ask here and get AI-generated answers..."
@@ -449,7 +449,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
               </button>
             </div>
             
-            <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20">
+            <div className="bg-white p-5 rounded-xl border border-primaryColor/20">
               <h3 className="font-medium mb-4">Related Audio Explanations</h3>
               <div className="space-y-4">
                 {Object.values(mockAudios)
@@ -458,7 +458,7 @@ export default function AudioPage({ params }: { params: Promise<{ id: string }> 
                     <div 
                       key={audio.id} 
                       className="flex gap-3 pb-3 border-b border-primaryColor/10 last:border-0 cursor-pointer"
-                      onClick={() => router.push(`/tutor-me/audio/${audio.id}`)}
+                      onClick={() => router.push(`/note-summarymary/audio/${audio.id}`)}
                     >
                       <div className="w-12 h-12 bg-primaryColor/10 rounded-lg flex items-center justify-center text-primaryColor flex-shrink-0">
                         <PiSpeakerHigh size={20} />

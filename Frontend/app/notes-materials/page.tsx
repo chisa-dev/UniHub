@@ -227,7 +227,7 @@ const NotesMaterials = () => {
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
           <PiNote className="text-primaryColor" />
-          Notes & Materials
+          Files & Materials
         </h1>
         
         <div className="flex gap-2">
@@ -243,7 +243,7 @@ const NotesMaterials = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         <div className="lg:col-span-1">
-          <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
+          <div className="bg-white p-5 rounded-xl border border-primaryColor/20 mb-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-medium">Topics</h3>
             </div>
@@ -330,18 +330,18 @@ const NotesMaterials = () => {
             <div className="space-y-2">
               <button 
                 onClick={() => setIsUploadModalOpen(true)}
-                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40"
+                className="w-full flex items-center gap-2 p-3 rounded-lg bg-white border border-primaryColor/20 hover:border-primaryColor/40"
               >
                 <PiUpload className="text-primaryColor" />
                 <span className="text-sm">Upload File</span>
               </button>
               
-              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40">
+              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white border border-primaryColor/20 hover:border-primaryColor/40">
                 <PiNote className="text-primaryColor" />
                 <span className="text-sm">Create Note</span>
               </button>
               
-              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-n0 border border-primaryColor/20 hover:border-primaryColor/40">
+              <button className="w-full flex items-center gap-2 p-3 rounded-lg bg-white border border-primaryColor/20 hover:border-primaryColor/40">
                 <PiBookOpen className="text-primaryColor" />
                 <span className="text-sm">Study Materials</span>
               </button>
@@ -350,7 +350,7 @@ const NotesMaterials = () => {
         </div>
         
         <div className="lg:col-span-3">
-          <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
+          <div className="bg-white p-5 rounded-xl border border-primaryColor/20 mb-6">
             <div className="flex justify-between items-center mb-4">
               <div className="relative flex-1 max-w-lg">
                 <input
@@ -570,7 +570,7 @@ const NotesMaterials = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20">
+            <div className="bg-white p-5 rounded-xl border border-primaryColor/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium">Recent Activity</h3>
                 <a href="#" className="text-xs text-primaryColor hover:underline">View All</a>
@@ -597,7 +597,7 @@ const NotesMaterials = () => {
               </div>
             </div>
             
-            <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20">
+            <div className="bg-white p-5 rounded-xl border border-primaryColor/20">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium">Quick Study Materials</h3>
                 <a href="#" className="text-xs text-primaryColor hover:underline">View All</a>

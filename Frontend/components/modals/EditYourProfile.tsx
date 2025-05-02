@@ -91,7 +91,7 @@ function EditProfileModal() {
           />
           <label
             htmlFor="photo-upload"
-            className="bg-white dark:bg-n0 flex justify-center items-center absolute bottom-1 right-1 rounded-full p-0.5 cursor-pointer"
+            className="bg-white flex justify-center items-center absolute bottom-1 right-1 rounded-full p-0.5 cursor-pointer"
           >
             <PiCloudArrowUp />
             <input type="file" className="hidden" id="photo-upload" />

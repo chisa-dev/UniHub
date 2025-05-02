@@ -144,7 +144,7 @@ const Insights = () => {
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white dark:bg-n0 p-4 rounded-xl border border-primaryColor/20">
+        <div className="bg-white p-4 rounded-xl border border-primaryColor/20">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-medium">Study Hours</h3>
             <PiChartBar className="text-primaryColor" />
@@ -173,7 +173,7 @@ const Insights = () => {
           </div>
         </div>
         
-        <div className="bg-white dark:bg-n0 p-4 rounded-xl border border-primaryColor/20">
+        <div className="bg-white p-4 rounded-xl border border-primaryColor/20">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-medium">Topics Studied</h3>
             <PiChartPie className="text-primaryColor" />
@@ -210,11 +210,11 @@ const Insights = () => {
             ) : (
               <div className={`absolute inset-0 ${topicsData[0].color}`}></div>
             )}
-            <div className="absolute inset-0 bg-white dark:bg-n0 rounded-full m-3"></div>
+            <div className="absolute inset-0 bg-white rounded-full m-3"></div>
           </div>
         </div>
         
-        <div className="bg-white dark:bg-n0 p-4 rounded-xl border border-primaryColor/20">
+        <div className="bg-white p-4 rounded-xl border border-primaryColor/20">
           <div className="flex justify-between items-center mb-3">
             <h3 className="font-medium">Productivity Score</h3>
             <PiChartLine className="text-primaryColor" />
@@ -240,7 +240,7 @@ const Insights = () => {
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-n0 p-4 rounded-xl border border-primaryColor/20">
+        <div className="bg-white p-4 rounded-xl border border-primaryColor/20">
           <h3 className="font-medium mb-4">Quiz Performance</h3>
           <div className="space-y-4">
             {statistics?.quiz_progress && statistics.quiz_progress.length > 0 ? (
@@ -272,7 +272,7 @@ const Insights = () => {
           </div>
         </div>
         
-        <div className="bg-white dark:bg-n0 p-4 rounded-xl border border-primaryColor/20">
+        <div className="bg-white p-4 rounded-xl border border-primaryColor/20">
           <h3 className="font-medium mb-4">Study Consistency</h3>
           <div className="grid grid-cols-7 gap-1">
             {[

@@ -25,7 +25,7 @@ function UpgradeModal() {
       </div>
 
       <div
-        className={`bg-white dark:bg-n0 w-[280px] min-[450px]:w-[370px] absolute -left-8 min-[400px]:left-0 top-12 rounded-xl ${
+        className={`bg-white w-[280px] min-[450px]:w-[370px] absolute -left-8 min-[400px]:left-0 top-12 rounded-xl ${
           modal
             ? "visible opacity-100 translate-y-0"
             : " invisible opacity-0 translate-y-2"

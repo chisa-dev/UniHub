@@ -24,7 +24,7 @@ function ShareViedeoModal() {
             <div className="p-2 rounded-md bg-white font-medium dark:bg-n0">
               <p className="text-sm">20:05</p>
             </div>
-            <div className="p-2 rounded-md bg-white dark:bg-n0">
+            <div className="p-2 rounded-md bg-white">
               <PiDownloadSimple className="text-xl" />
             </div>
           </div>

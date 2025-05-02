@@ -144,7 +144,7 @@ export default function VideoPage({ params }: { params: Promise<{ id: string }> 
             />
           </div>
           
-          <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
+          <div className="bg-white p-5 rounded-xl border border-primaryColor/20 mb-6">
             <h1 className="text-xl font-semibold mb-2">{video.title}</h1>
             <div className="flex flex-wrap items-center text-sm text-n400 dark:text-n300 mb-4">
               <span className="mr-3">{video.topic}</span>
@@ -237,7 +237,7 @@ export default function VideoPage({ params }: { params: Promise<{ id: string }> 
         
         <div className="lg:col-span-1">
           <div className="sticky top-4">
-            <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20 mb-6">
+            <div className="bg-white p-5 rounded-xl border border-primaryColor/20 mb-6">
               <h3 className="font-medium mb-4">Ask a Question</h3>
               <textarea 
                 placeholder="Have a question about this video? Ask here and get AI-generated answers..."
@@ -249,7 +249,7 @@ export default function VideoPage({ params }: { params: Promise<{ id: string }> 
               </button>
             </div>
             
-            <div className="bg-white dark:bg-n0 p-5 rounded-xl border border-primaryColor/20">
+            <div className="bg-white p-5 rounded-xl border border-primaryColor/20">
               <h3 className="font-medium mb-4">Related Videos</h3>
               <div className="space-y-4">
                 {Object.values(mockVideos)
@@ -258,7 +258,7 @@ export default function VideoPage({ params }: { params: Promise<{ id: string }> 
                     <div 
                       key={video.id} 
                       className="flex gap-3 pb-3 border-b border-primaryColor/10 last:border-0 cursor-pointer"
-                      onClick={() => router.push(`/tutor-me/video/${video.id}`)}
+                      onClick={() => router.push(`/note-summary/video/${video.id}`)}
                     >
                       <div className="relative w-24 h-16 bg-black rounded-lg overflow-hidden flex-shrink-0">
                         <div className="absolute inset-0 flex items-center justify-center bg-black/20">

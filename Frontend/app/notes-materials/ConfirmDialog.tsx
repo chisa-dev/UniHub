@@ -24,7 +24,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-n0 rounded-xl p-6 w-full max-w-md">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-2">
             <PiWarning className="text-warningColor" size={24} />

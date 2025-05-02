@@ -267,7 +267,7 @@ const Calendar = () => {
         </button>
       </div>
       
-      <div className="bg-white dark:bg-n0 rounded-xl border border-primaryColor/20 p-4 mb-6">
+      <div className="bg-white rounded-xl border border-primaryColor/20 p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
           <div className="flex gap-4 items-center">
             <button onClick={goToPreviousMonth} className="p-2 hover:bg-primaryColor/10 rounded-full">
@@ -311,7 +311,7 @@ const Calendar = () => {
         </div>
       </div>
       
-      <div className="bg-white dark:bg-n0 rounded-xl border border-primaryColor/20 p-4">
+      <div className="bg-white rounded-xl border border-primaryColor/20 p-4">
         <h3 className="font-medium mb-3">Upcoming Events</h3>
         {!isMounted ? (
           <div className="py-10 text-center">

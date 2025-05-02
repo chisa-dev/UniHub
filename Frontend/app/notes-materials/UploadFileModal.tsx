@@ -146,7 +146,7 @@ const UploadFileModal: React.FC<UploadFileModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-      <div className="bg-white dark:bg-n0 rounded-xl p-6 w-full max-w-md">
+      <div className="bg-white rounded-xl p-6 w-full max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Upload New Material</h2>
           <button 

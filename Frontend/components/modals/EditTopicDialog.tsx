@@ -59,7 +59,7 @@ const EditTopicDialog: React.FC<EditTopicDialogProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
       <div 
         ref={dialogRef}
-        className="bg-white dark:bg-n0 rounded-xl w-full max-w-md p-6 relative"
+        className="bg-white rounded-xl w-full max-w-md p-6 relative"
       >
         <button 
           onClick={onClose}
