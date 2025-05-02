@@ -19,6 +19,8 @@ import {
   PiQuestion,
   PiPlus,
   PiTrash,
+  PiX,
+  PiBookmark,
 } from "react-icons/pi";
 import Link from "next/link";
 import { useMainModal } from "@/stores/modal";
@@ -36,8 +38,10 @@ type MainSidebarProps = {
 function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const { modalOpen } = useMainModal();
   const pathname = usePathname();
-  const [showTopics, setShowTopics] = useState(false);
+  const [showTopics, setShowTopics] = useState(true);
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [filteredTopics, setFilteredTopics] = useState<Topic[]>([]);
+  const [topicFilter, setTopicFilter] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { t } = useTranslation();
@@ -48,6 +52,20 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [topicToDelete, setTopicToDelete] = useState<{id: string, title: string} | null>(null);
   
+  // Filter topics based on search input
+  useEffect(() => {
+    if (topics.length > 0) {
+      if (topicFilter.trim() === "") {
+        setFilteredTopics(topics);
+      } else {
+        const filtered = topics.filter(topic => 
+          topic.title.toLowerCase().includes(topicFilter.toLowerCase())
+        );
+        setFilteredTopics(filtered);
+      }
+    }
+  }, [topics, topicFilter]);
+  
   // Set isClient to true once component mounts (client-side only)
   useEffect(() => {
     setIsClient(true);
@@ -56,7 +74,20 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
     if (window.innerWidth > 992) {
       setShowSidebar(true);
     }
+    
+    // Load topics expanded state from localStorage
+    const savedTopicsState = localStorage.getItem('topicsExpanded');
+    if (savedTopicsState !== null) {
+      setShowTopics(savedTopicsState === 'true');
+    }
   }, [setShowSidebar]);
+  
+  // Save expanded state to localStorage when it changes
+  useEffect(() => {
+    if (isClient) {
+      localStorage.setItem('topicsExpanded', showTopics.toString());
+    }
+  }, [showTopics, isClient]);
   
   // Fetch topics from the API
   const fetchTopics = async () => {
@@ -65,6 +96,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
       setError(null);
       const response = await topicsService.getTopics();
       setTopics(response.topics);
+      setFilteredTopics(response.topics);
     } catch (err) {
       console.error("[LOG sidebar] ========= Error fetching topics:", err);
       setError(err instanceof Error ? err.message : "Failed to load topics");
@@ -177,7 +209,9 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
           <div className="mt-6">
             <button 
               onClick={() => setShowTopics(!showTopics)}
-              className="flex w-full justify-between items-center py-3 px-6 hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500"
+              className={`flex w-full justify-between items-center py-3 px-6 hover:text-primaryColor rounded-xl duration-300 ${
+                showTopics ? 'bg-primaryColor/10 text-primaryColor' : 'hover:bg-primaryColor/10'
+              }`}
             >
               <span className="flex items-center gap-2 font-medium">
                 <PiAlignLeft size={20} className="text-primaryColor" />
@@ -185,7 +219,7 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
               </span>
               <div className="flex items-center gap-2">
                 {isClient && (
-                  <span 
+                  <span
                     onClick={(e) => {
                       e.stopPropagation();
                       setShowAddTopicModal(true);
@@ -205,7 +239,30 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
             </button>
             
             {/* Dropdown Content */}
-            <div className={`overflow-hidden transition-all duration-300 ${showTopics ? 'max-h-60' : 'max-h-0'}`}>
+            <div className={`overflow-y-auto transition-all duration-300 scrollbar-thin scrollbar-thumb-primaryColor/20 scrollbar-track-transparent ${
+              showTopics ? 'max-h-[40vh]' : 'max-h-0'
+            }`}>
+              {/* Search filter - only show if we have topics and the dropdown is open */}
+              {showTopics && topics.length > 3 && (
+                <div className="relative mx-6 my-2">
+                  <input
+                    type="text"
+                    placeholder="Filter topics..."
+                    value={topicFilter}
+                    onChange={(e) => setTopicFilter(e.target.value)}
+                    className="w-full py-1.5 px-3 pr-8 text-sm rounded-lg bg-white dark:bg-n700 border border-primaryColor/20 focus:border-primaryColor focus:outline-none"
+                  />
+                  {topicFilter && (
+                    <button
+                      onClick={() => setTopicFilter("")}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-n300 hover:text-primaryColor"
+                    >
+                      <PiX size={14} />
+                    </button>
+                  )}
+                </div>
+              )}
+
               {isLoading ? (
                 <div className="text-sm text-center py-2 pl-12 pr-6">Loading topics...</div>
               ) : error ? (
@@ -220,28 +277,35 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
                   <PiPlus size={16} />
                   <span>Add Topic</span>
                 </button>
+              ) : filteredTopics.length === 0 && topicFilter.trim() !== "" ? (
+                <div className="py-2 px-6 text-center text-sm text-n300">
+                  No topics found matching "{topicFilter}"
+                </div>
               ) : (
-                topics.map((topic) => (
-                  <div key={topic.id} className="relative group">
-                    <Link
-                      href={`/topics/${topic.id}`}
-                      className={`flex items-center gap-2 py-2.5 pl-12 pr-6 text-sm hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500 ${
-                        isActive(`/topics/${topic.id}`) ? 'bg-primaryColor/10 text-primaryColor' : ''
-                      }`}
-                    >
-                      {topic.title}
-                    </Link>
-                    {isClient && (
-                      <span
-                        onClick={(e) => handleDeleteClick(e, topic)}
-                        className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-errorColor/10 text-errorColor transition-opacity cursor-pointer"
-                        title="Delete topic"
+                <div className="py-1">
+                  {filteredTopics.map((topic) => (
+                    <div key={topic.id} className="relative group">
+                      <Link
+                        href={`/topics/${topic.id}`}
+                        className={`flex items-center gap-2 py-2.5 pl-12 pr-6 text-sm hover:text-primaryColor hover:bg-primaryColor/10 rounded-xl duration-500 ${
+                          isActive(`/topics/${topic.id}`) ? 'bg-primaryColor/10 text-primaryColor' : ''
+                        }`}
                       >
-                        <PiTrash size={14} />
-                      </span>
-                    )}
-                  </div>
-                ))
+                        <PiBookmark size={14} className="text-primaryColor opacity-70" />
+                        <span className="truncate">{topic.title}</span>
+                      </Link>
+                      {isClient && (
+                        <span
+                          onClick={(e) => handleDeleteClick(e, topic)}
+                          className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1.5 rounded-full opacity-0 group-hover:opacity-100 hover:bg-errorColor/10 text-errorColor transition-opacity cursor-pointer"
+                          title="Delete topic"
+                        >
+                          <PiTrash size={14} />
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               )}
             </div>
           </div>

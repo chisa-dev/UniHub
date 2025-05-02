@@ -385,4 +385,78 @@ router.post('/notes/mock', ragController.generateNoteValidation, async (req, res
   }
 });
 
+/**
+ * @swagger
+ * /rag/chat:
+ *   post:
+ *     summary: Chat with context from topic materials or general academic chat
+ *     tags: [RAG]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - message
+ *             properties:
+ *               message:
+ *                 type: string
+ *                 description: User message
+ *               context:
+ *                 type: object
+ *                 properties:
+ *                   topicId:
+ *                     type: string
+ *                     description: Topic ID (optional - if omitted, provides general academic chat)
+ *                   previousMessages:
+ *                     type: array
+ *                     description: Previous messages in the conversation
+ *                     items:
+ *                       type: object
+ *                       required:
+ *                         - role
+ *                         - content
+ *                       properties:
+ *                         role:
+ *                           type: string
+ *                           enum: [user, assistant]
+ *                           description: Role of the message sender
+ *                         content:
+ *                           type: string
+ *                           description: Message content
+ *     responses:
+ *       200:
+ *         description: Chat response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   description: Assistant response message in markdown format
+ *                 topicId:
+ *                   type: string
+ *                   description: Topic ID (if provided)
+ *                 topicTitle:
+ *                   type: string
+ *                   description: Topic title (if topicId was provided)
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   description: Response timestamp
+ *       400:
+ *         description: Invalid request
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Topic not found
+ *       500:
+ *         description: Server error
+ */
+router.post('/chat', ragController.chatValidation, ragController.chatWithContext);
+
 module.exports = router; 

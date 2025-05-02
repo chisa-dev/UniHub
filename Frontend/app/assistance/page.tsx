@@ -3,12 +3,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
-import { PiPaperPlaneRight, PiLightning, PiSparkle } from "react-icons/pi";
+import { PiPaperPlaneRight, PiLightning, PiSparkle, PiRobot } from "react-icons/pi";
 import TopicHeader from "@/components/assistance/TopicHeader";
 import ChatMessage from "@/components/assistance/ChatMessage";
 import TypingAnimation from "@/components/ui/TypingAnimation";
 import AssistanceBackground from "@/components/ui/AssistanceBackground";
-import { Message, ChatContext } from "./types";
+import { Message, ChatContext, SendMessageRequest } from "./types";
 import { assistanceService } from "./assistanceService";
 import { topicsService } from "../topics/topicsService";
 import Image from "next/image";
@@ -23,7 +23,7 @@ const Assistance = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [topic, setTopic] = useState({ title: "", description: "", filesCount: 0 });
+  const [topic, setTopic] = useState({ title: "", description: "", materialsCount: 0 });
   const [hasTopicSelected, setHasTopicSelected] = useState(false);
   
   const [chatContext, setChatContext] = useState<ChatContext>({
@@ -41,13 +41,13 @@ const Assistance = () => {
       if (topicId) {
         try {
           const topicData = await topicsService.getTopic(topicId);
-          const filesCount = await assistanceService.getTopicFilesCount(topicId);
+          const materialsCount = await assistanceService.getTopicMaterialsCount(topicId);
           
           // Update the topic information
           setTopic({
             title: topicData.title,
             description: topicData.description,
-            filesCount: filesCount
+            materialsCount: materialsCount
           });
           
           setHasTopicSelected(true);
@@ -128,20 +128,35 @@ const Assistance = () => {
     setIsLoading(true);
     
     try {
-      // Format previous messages for API
-      const previousMessages = chatContext.messageHistory.map(msg => ({
-        role: msg.role,
-        content: msg.content
-      }));
+      // Format previous messages for API - include only a reasonable history (last 10 messages)
+      const previousMessages = chatContext.messageHistory
+        .slice(-10) // Take only last 10 messages for context
+        .map(msg => ({
+          role: msg.role,
+          content: msg.content
+        }));
       
-      // Send message to API
-      const response = await assistanceService.sendMessage({
+      // Add the current message
+      previousMessages.push({
+        role: userMessage.role,
+        content: userMessage.content
+      });
+      
+      // Prepare the request object
+      const requestData: SendMessageRequest = {
         message: userMessage.content,
         context: {
-          topicId: topicId || "",
-          previousMessages: previousMessages
+          previousMessages
         }
-      });
+      };
+      
+      // Add topicId only if it exists
+      if (topicId) {
+        requestData.context.topicId = topicId;
+      }
+      
+      // Send message to API
+      const response = await assistanceService.sendMessage(requestData);
       
       // Add assistant response to chat
       const assistantMessage: Message = {
@@ -213,7 +228,7 @@ const Assistance = () => {
         {hasTopicSelected && (
           <TopicHeader 
             title={topic.title} 
-            filesCount={topic.filesCount}
+            materialsCount={topic.materialsCount}
             description={topic.description}
           />
         )}
@@ -261,7 +276,7 @@ const Assistance = () => {
                     <ChatMessage 
                       message={msg} 
                       isGreeting={index === 0} 
-                      animated={msg.role === 'assistant'}
+                      animated={msg.role === 'assistant' && index === chatContext.messageHistory.length - 1}
                     />
                   </div>
                 ))
@@ -269,9 +284,16 @@ const Assistance = () => {
               
               {isLoading && (
                 <div className="flex justify-start items-start gap-1 sm:gap-3 w-full max-w-[90%]">
-                  <div className="w-6 h-6"></div>
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primaryColor to-secondaryColor flex items-center justify-center flex-shrink-0">
+                    <Image src={logo} alt="UniHub Logo" width={20} height={20} className="object-cover" />
+                  </div>
                   <div className="flex flex-col justify-start items-start gap-3 flex-1">
-                    <div className="text-sm bg-primaryColor/5 py-3 px-5 border border-primaryColor/20 rounded-lg">
+                    <p className="text-xs text-n100">UniHub, just now</p>
+                    <div className="text-sm bg-gradient-to-r from-primaryColor/5 to-transparent py-3 px-5 border border-primaryColor/20 rounded-xl flex items-center">
+                      <div className="flex items-center gap-2 mr-3">
+                        <PiRobot className="text-primaryColor" />
+                        <span className="text-xs font-medium">AI Assistant</span>
+                      </div>
                       <TypingAnimation />
                     </div>
                   </div>
@@ -291,7 +313,7 @@ const Assistance = () => {
               <textarea
                 ref={textareaRef}
                 className="w-full outline-none p-3 bg-transparent resize-none overflow-hidden min-h-[48px] max-h-[200px] text-sm"
-                placeholder="Message UniHub..."
+                placeholder={isLoading ? "Waiting for response..." : "Message UniHub..."}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}

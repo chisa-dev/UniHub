@@ -18,21 +18,8 @@ export const assistanceService = {
         throw new Error('Authentication required');
       }
       
-      // This is a mock implementation - when integrating with a real API,
-      // you'll need to update API_ENDPOINTS and replace this with an actual fetch call
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock response
-      return {
-        message: `This is a mock response to: "${data.message}"`,
-        timestamp: new Date()
-      };
-      
-      // Real implementation would look something like this:
-      /*
-      const response = await fetch(API_ENDPOINTS.ASSISTANCE.SEND_MESSAGE, {
+      // Call the RAG chat API endpoint
+      const response = await fetch(`${API_ENDPOINTS.RAG.CHAT}`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -46,15 +33,21 @@ export const assistanceService = {
         throw new Error(errorData.message || 'Failed to send message');
       }
 
-      return await response.json();
-      */
+      const responseData = await response.json();
+      
+      // The API might return different formats, so we need to handle all possibilities
+      // Format the response to match our expected type
+      return {
+        message: responseData.response || responseData.message || responseData.content || "I'm sorry, I couldn't generate a response.",
+        timestamp: new Date()
+      };
     } catch (error) {
       console.error('[LOG assistance] ========= Error sending message:', error);
       throw error;
     }
   },
   
-  async getTopicFilesCount(_topicId: string): Promise<number> {
+  async getTopicMaterialsCount(topicId: string): Promise<number> {
     try {
       if (isServer()) {
         return 0;
@@ -66,16 +59,8 @@ export const assistanceService = {
         throw new Error('Authentication required');
       }
       
-      // This is a mock implementation
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Return mock file count (random between 0-10)
-      return Math.floor(Math.random() * 11);
-      
-      // Real implementation would look something like this:
-      /*
-      const response = await fetch(API_ENDPOINTS.ASSISTANCE.GET_TOPIC_FILES(topicId), {
+      // Call the API to get materials for the topic
+      const response = await fetch(API_ENDPOINTS.MATERIALS.BY_TOPIC(topicId), {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -85,14 +70,14 @@ export const assistanceService = {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to get topic files');
+        throw new Error(errorData.message || 'Failed to get topic materials');
       }
 
-      const data = await response.json();
-      return data.filesCount;
-      */
+      // The response is an array of materials, so we count its length
+      const materials = await response.json();
+      return Array.isArray(materials) ? materials.length : 0;
     } catch (error) {
-      console.error('[LOG assistance] ========= Error getting topic files count:', error);
+      console.error('[LOG assistance] ========= Error getting topic materials count:', error);
       // Return 0 as a fallback
       return 0;
     }

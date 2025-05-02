@@ -4,78 +4,76 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env') });
 const mysql = require('mysql2/promise');
 
 /**
- * Runs all SQL statements from a file
+ * Runs a SQL file as a single batch
  * @param {string} filePath - Path to the SQL file
  * @returns {Promise<boolean>} - Success status
  */
 async function runSingleFile(filePath) {
-  // Read SQL file
-  const sql = fs.readFileSync(filePath, 'utf8');
-  
-  // Split into individual statements
-  const statements = sql
-    .split(';')
-    .map(statement => statement.trim())
-    .filter(statement => statement.length > 0);
-  
-  // Load environment variables
-  const {
-    DB_HOST = 'localhost',
-    DB_USER = 'root',
-    DB_PASSWORD = '',
-    DB_NAME = 'unihub_db',
-  } = process.env;
-  
-  console.log(`[LOG migration] ========= Running migration from ${path.basename(filePath)}`);
-  console.log(`[LOG migration] ========= Connecting to database ${DB_NAME} at ${DB_HOST}`);
-  
-  // Get database connection
   try {
+    // Read SQL file
+    console.log(`[LOG migration] ========= Running migration from ${path.basename(filePath)}`);
+    const sql = fs.readFileSync(filePath, 'utf8');
+    
+    // Load environment variables
+    const {
+      DB_HOST = 'localhost',
+      DB_USER = 'root',
+      DB_PASSWORD = '',
+      DB_NAME = 'unihub_db',
+    } = process.env;
+    
+    console.log(`[LOG migration] ========= Connecting to database ${DB_NAME} at ${DB_HOST}`);
+    
+    // Get database connection with multipleStatements option
     const connection = await mysql.createConnection({
       host: DB_HOST,
       user: DB_USER,
       password: DB_PASSWORD,
-      database: DB_NAME,
       multipleStatements: true
     });
     
     console.log('[LOG migration] ========= Connected to database');
-    console.log('[LOG migration] ========= Running migrations...');
     
-    // Execute each statement
-    for (const statement of statements) {
-      console.log(`[LOG migration] ========= Executing: ${statement.substring(0, 60)}...`);
-      try {
-        await connection.execute(`${statement};`);
-      } catch (err) {
-        console.error(`[LOG migration] ========= Error executing statement: ${err.message}`);
-        console.error(statement);
-        // Continue with other statements
-      }
-    }
+    // First ensure database exists and use it
+    await connection.query(`CREATE DATABASE IF NOT EXISTS ${DB_NAME}`);
+    await connection.query(`USE ${DB_NAME}`);
     
-    console.log('[LOG migration] ========= Migrations completed!');
+    console.log('[LOG migration] ========= Running SQL file as a batch...');
+    
+    // Execute the entire SQL file as a single batch
+    await connection.query(sql);
+    
+    console.log('[LOG migration] ========= Migration completed successfully!');
     await connection.end();
     return true;
   } catch (error) {
-    console.error('[LOG migration] ========= Error connecting to database:', error);
+    console.error('[LOG migration] ========= Error during migration:', error);
     return false;
   }
 }
 
+/**
+ * Get all SQL files from the migrations directory
+ * @returns {Array<string>} Array of file paths sorted by filename
+ */
+function getSqlFiles() {
+  const migrationsDir = __dirname;
+  const files = fs.readdirSync(migrationsDir)
+    .filter(file => file.endsWith('.sql'))
+    .map(file => path.join(migrationsDir, file));
+  
+  // Sort files alphabetically so they run in order
+  return files.sort();
+}
+
 async function runMigrations() {
-  // Migration files to run in order
-  const migrationFiles = [
-    path.join(__dirname, 'create_statistics_tables.sql'),
-    path.join(__dirname, 'create_materials_table.sql'),
-    path.join(__dirname, 'create_indexes.sql'),
-    path.join(__dirname, 'add_is_private_to_notes.sql'),
-    path.join(__dirname, 'add_user_relations.sql'),
-    path.join(__dirname, 'update_calendar_fields.sql'),
-    path.join(__dirname, 'update_notes_for_ai_generation.sql'),
-    path.join(__dirname, 'add_read_time_to_notes.sql'),
-    path.join(__dirname, 'add_user_goal_to_notes.sql')
-  ];
+  // Get all SQL migration files
+  const migrationFiles = getSqlFiles();
+  
+  console.log(`[LOG migration] ========= Found ${migrationFiles.length} migration files to run:`);
+  migrationFiles.forEach((file, index) => {
+    console.log(`[LOG migration] ========= ${index + 1}. ${path.basename(file)}`);
+  });
   
   let success = true;
   
@@ -83,6 +81,7 @@ async function runMigrations() {
     const result = await runSingleFile(sqlFile);
     if (!result) {
       success = false;
+      console.error(`[LOG migration] ========= Failed to run migration: ${path.basename(sqlFile)}`);
     }
   }
   
@@ -94,6 +93,8 @@ if (require.main === module) {
   runMigrations().then(success => {
     if (!success) {
       process.exit(1);
+    } else {
+      console.log('[LOG migration] ========= All migrations completed successfully!');
     }
   }).catch(error => {
     console.error('[LOG migration] ========= Unhandled error:', error);

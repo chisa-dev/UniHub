@@ -36,9 +36,9 @@ export const API_ENDPOINTS = {
     DELETE: (id: string) => `${API_BASE_URL}/quizzes/${id}`,
     BY_TOPIC: (topicId: string) => `${API_BASE_URL}/quizzes/topic/${topicId}`,
   },
-  ASSISTANCE: {
-    SEND_MESSAGE: `${API_BASE_URL}/assistance/chat`,
-    GET_TOPIC_FILES: (topicId: string) => `${API_BASE_URL}/assistance/files/${topicId}`,
+  
+  RAG: {
+    CHAT: `${API_BASE_URL}/rag/chat`,
   },
   CALENDAR: {
     GET_EVENTS: `${API_BASE_URL}/calendar/events`,

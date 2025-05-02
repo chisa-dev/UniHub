@@ -110,6 +110,44 @@ export default {
             'code::after': {
               content: '""',
             },
+            table: {
+              width: '100%',
+              borderCollapse: 'separate',
+              borderSpacing: 0,
+              borderColor: '#e5e7eb',
+              borderWidth: '1px',
+              tableLayout: 'auto',
+              fontSize: '0.875rem',
+              lineHeight: '1.25rem',
+            },
+            th: {
+              backgroundColor: '#f9fafb',
+              fontWeight: '600',
+              textAlign: 'left',
+              padding: '0.75rem',
+              borderBottomWidth: '1px',
+              borderRightWidth: '1px',
+              borderColor: '#e5e7eb',
+            },
+            'th:last-child': {
+              borderRightWidth: '0',
+            },
+            td: {
+              padding: '0.75rem',
+              borderBottomWidth: '1px',
+              borderRightWidth: '1px',
+              borderColor: '#e5e7eb',
+            },
+            'td:last-child': {
+              borderRightWidth: '0',
+            },
+            'tbody tr:last-child td': {
+              borderBottomWidth: '0',
+            },
+            '.math, .math-inline, .math-display': {
+              fontFamily: 'KaTeX_Math',
+              fontStyle: 'normal',
+            },
           },
         },
       },

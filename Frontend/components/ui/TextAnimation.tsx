@@ -5,12 +5,14 @@ interface TextAnimationProps {
   text: string;
   speed?: number;
   onComplete?: () => void;
+  batchSize?: number;
 }
 
 const TextAnimation: React.FC<TextAnimationProps> = ({ 
   text, 
-  speed = 20, 
-  onComplete 
+  speed = 5,
+  onComplete,
+  batchSize = 4
 }) => {
   const [displayedText, setDisplayedText] = useState('');
   const [index, setIndex] = useState(0);
@@ -19,15 +21,17 @@ const TextAnimation: React.FC<TextAnimationProps> = ({
   useEffect(() => {
     if (index < text.length) {
       const timer = setTimeout(() => {
-        setDisplayedText(prev => prev + text.charAt(index));
-        setIndex(index + 1);
+        const nextIndex = Math.min(index + batchSize, text.length);
+        const nextChunk = text.substring(index, nextIndex);
+        setDisplayedText(prev => prev + nextChunk);
+        setIndex(nextIndex);
       }, speed);
       return () => clearTimeout(timer);
     } else if (!completed) {
       setCompleted(true);
       if (onComplete) onComplete();
     }
-  }, [index, text, speed, completed, onComplete]);
+  }, [index, text, speed, completed, onComplete, batchSize]);
 
   return <span>{displayedText}</span>;
 };

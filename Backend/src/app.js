@@ -57,6 +57,8 @@ const initializeDatabase = async () => {
       await sequelize.sync();
       console.log('Database tables synced successfully.');
     }
+    
+ 
   } catch (error) {
     console.error('Unable to connect to the database:', error);
     // Don't exit process in production as it will crash the serverless function

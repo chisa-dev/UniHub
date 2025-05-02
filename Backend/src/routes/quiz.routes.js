@@ -96,6 +96,86 @@ router.get('/topic/:topicId', auth, quizController.getQuizzesByTopic);
 
 /**
  * @swagger
+ * /quizzes/rag:
+ *   post:
+ *     summary: Generate a quiz using RAG (Retrieval-Augmented Generation)
+ *     tags: [Quizzes]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - topicId
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 description: Title of the quiz
+ *               topicId:
+ *                 type: string
+ *                 description: ID of the topic to generate quiz for
+ *               difficulty:
+ *                 type: string
+ *                 enum: [easy, medium, hard]
+ *                 default: medium
+ *                 description: Difficulty level of the quiz
+ *               numQuestions:
+ *                 type: integer
+ *                 minimum: 1
+ *                 maximum: 20
+ *                 default: 5
+ *                 description: Number of questions to generate
+ *     responses:
+ *       201:
+ *         description: Quiz generated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 quiz:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     title:
+ *                       type: string
+ *                     description:
+ *                       type: string
+ *                     difficulty:
+ *                       type: string
+ *                     topic_id:
+ *                       type: string
+ *                     question_count:
+ *                       type: integer
+ *       400:
+ *         description: Invalid input parameters
+ *       404:
+ *         description: Topic not found
+ *       500:
+ *         description: Server error
+ */
+router.post(
+  '/rag',
+  [
+    auth,
+    body('title').notEmpty().withMessage('Title is required'),
+    body('topicId').notEmpty().withMessage('Topic ID is required'),
+    body('difficulty').optional().isIn(['easy', 'medium', 'hard']),
+    body('numQuestions').optional().isInt({ min: 1, max: 20 }),
+    validate
+  ],
+  quizController.createRagQuiz
+);
+
+/**
+ * @swagger
  * /quizzes/{id}:
  *   get:
  *     summary: Get quiz by ID with questions
@@ -136,77 +216,7 @@ router.get('/:id', auth, quizController.getQuiz);
  */
 router.get('/:id/attempts', auth, quizController.getQuizAttempts);
 
-/**
- * @swagger
- * /quizzes:
- *   post:
- *     summary: Create a new quiz
- *     tags: [Quizzes]
- *     security:
- *       - bearerAuth: []
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - title
- *               - topicId
- *               - questions
- *             properties:
- *               title:
- *                 type: string
- *               description:
- *                 type: string
- *               topicId:
- *                 type: string
- *               isAiGenerated:
- *                 type: boolean
- *                 default: false
- *               questions:
- *                 type: array
- *                 items:
- *                   type: object
- *                   required:
- *                     - question
- *                     - questionType
- *                     - correctAnswer
- *                   properties:
- *                     question:
- *                       type: string
- *                     questionType:
- *                       type: string
- *                       enum: [multiple_choice, true_false, short_answer]
- *                     correctAnswer:
- *                       type: string
- *                     options:
- *                       type: array
- *                       items:
- *                         type: string
- *                     explanation:
- *                       type: string
- *     responses:
- *       201:
- *         description: Quiz created successfully
- */
-router.post(
-  '/',
-  [
-    auth,
-    body('title').trim().notEmpty(),
-    body('description').optional().trim(),
-    body('topicId').notEmpty(),
-    body('questions').isArray({ min: 1 }),
-    body('questions.*.question').trim().notEmpty(),
-    body('questions.*.questionType').isIn(['multiple_choice', 'true_false', 'short_answer']),
-    body('questions.*.correctAnswer').notEmpty(),
-    body('questions.*.options').optional().isArray(),
-    body('questions.*.explanation').optional().trim(),
-    validate
-  ],
-  quizController.createQuiz
-);
+
 
 /**
  * @swagger

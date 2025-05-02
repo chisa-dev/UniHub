@@ -311,9 +311,161 @@ Important reminders:
   }
 };
 
+/**
+ * Handles a chat conversation with context from materials in a topic
+ * @param {Object} params - Chat parameters
+ * @param {string} params.message - User message
+ * @param {string} params.userId - User ID
+ * @param {string|null} params.topicId - Topic ID (optional)
+ * @param {Array} params.previousMessages - Previous messages in the conversation
+ * @returns {Promise<string>} - Assistant response
+ */
+const chatWithTopic = async ({ message, userId, topicId, previousMessages = [] }) => {
+  try {
+    console.log(`[LOG chat_with_topic] ========= Starting chat ${topicId ? `for topic ${topicId}` : '(general academic chat)'}`);
+    const startTime = Date.now();
+    
+    let relevantDocs = [];
+    let context = "No relevant materials found.";
+    
+    // Only search for relevant documents if topicId is provided
+    if (topicId) {
+      // Create a unique collection name (same format as indexMaterials)
+      const collectionName = `user_${userId}_topic_${topicId}`;
+      console.log(`[LOG chat_with_topic] ========= Using collection: ${collectionName}`);
+      
+      // Generate embedding for the query
+      console.log(`[LOG chat_with_topic] ========= Generating embedding for user query`);
+      const queryEmbedding = await documentProcessor.generateEmbedding(message);
+      console.log(`[LOG chat_with_topic] ========= Embedding generated successfully`);
+      
+      // Search for relevant documents - use a faster timeout for chat (10 seconds)
+      console.log(`[LOG chat_with_topic] ========= Searching for relevant context in ${collectionName}`);
+      relevantDocs = await vectorStore.search(collectionName, queryEmbedding, 5, 0.6, 10000);
+      console.log(`[LOG chat_with_topic] ========= Found ${relevantDocs.length} relevant document chunks in ${(Date.now() - startTime)/1000}s`);
+      
+      // Extract context from relevant documents
+      if (relevantDocs.length > 0) {
+        context = relevantDocs.map(doc => {
+          const source = doc.metadata.fileName || 'Unknown source';
+          return `--- From: ${source} ---\n${doc.content}`;
+        }).join('\n\n');
+        console.log(`[LOG chat_with_topic] ========= Extracted context from ${relevantDocs.length} documents`);
+      }
+    } else {
+      console.log(`[LOG chat_with_topic] ========= No topicId provided, using general academic chat`);
+    }
+    
+    // Check if OpenAI is available
+    if (!openai) {
+      console.log('[LOG chat_with_topic] ========= OpenAI not available, generating mock response');
+      return `**Mock Chat Response**
+
+I don't have access to OpenAI API at the moment${topicId ? `, but I found ${relevantDocs.length} relevant documents in your materials` : ''}.
+
+Your query was: "${message}"
+
+To use the chat feature properly, please make sure the OpenAI API key is configured.`;
+    }
+    
+    // Format previous messages in the right format for OpenAI API
+    const formattedPreviousMessages = previousMessages.map(msg => ({
+      role: msg.role,
+      content: msg.content
+    }));
+    
+    // Create system message - different for topic-based vs general chat
+    const systemMessage = topicId 
+      ? `You are an expert academic tutor specializing in educational topics.
+Respond to the user's queries based on the context provided from their learning materials.
+Format your responses using markdown. Include appropriate headings, lists, tables, code blocks, and mathematical notation as needed.
+Your tone should be academic, detailed, and precise. Provide in-depth explanations that demonstrate expertise.
+If formulas or equations are relevant, use LaTeX notation within markdown (e.g., $E = mc^2$).
+If coding examples are needed, provide them in appropriate markdown code blocks with the language specified.
+Always aim to be factually accurate and cite or reference the specific materials when possible.
+Do not fabricate information if it's not in the provided context - acknowledge gaps in knowledge.`
+      : `You are an expert academic tutor specializing in educational topics.
+Respond to the user's queries with comprehensive and academically rigorous answers.
+Format your responses using markdown. Include appropriate headings, lists, tables, code blocks, and mathematical notation as needed.
+Your tone should be academic, detailed, and precise. Provide in-depth explanations that demonstrate expertise.
+If formulas or equations are relevant, use LaTeX notation within markdown (e.g., $E = mc^2$).
+If coding examples are needed, provide them in appropriate markdown code blocks with the language specified.
+Always aim to be factually accurate and acknowledge limitations in your knowledge when appropriate.
+Provide reliable information from an educational perspective.`;
+    
+    // Create message array with system message, context, previous messages and current query
+    const messages = [
+      { role: 'system', content: systemMessage }
+    ];
+    
+    if (topicId) {
+      // Only add the context message if we have previous messages (otherwise include it with the first user message)
+      if (formattedPreviousMessages.length > 0) {
+        // Add a system message with context
+        messages.push({ 
+          role: 'system', 
+          content: `Here is context from the user's learning materials that may be relevant to their query:\n\n${context}`
+        });
+        
+        // Add previous conversation messages
+        messages.push(...formattedPreviousMessages);
+        
+        // Add the current user message
+        messages.push({ role: 'user', content: message });
+      } else {
+        // For the first message, combine the context and query
+        messages.push({ 
+          role: 'user', 
+          content: `Here is context from my learning materials:\n\n${context}\n\nBased on this context, please answer my question: ${message}`
+        });
+      }
+    } else {
+      // For general chat, just include previous messages and current query
+      if (formattedPreviousMessages.length > 0) {
+        messages.push(...formattedPreviousMessages);
+      }
+      
+      messages.push({ role: 'user', content: message });
+    }
+    
+    console.log(`[LOG chat_with_topic] ========= Calling OpenAI API with ${messages.length} messages`);
+    
+    try {
+      // Generate completion from OpenAI with a faster timeout for chat (15 seconds)
+      const completion = await Promise.race([
+        openai.createChatCompletion({
+          model: 'gpt-3.5-turbo',
+          messages: messages,
+          temperature: 0.3, // Lower temperature for more factual responses
+          max_tokens: 2000  // Shorter responses than full notes
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('OpenAI request timed out after 15 seconds')), 15000)
+        )
+      ]);
+      
+      console.log(`[LOG chat_with_topic] ========= OpenAI API response received in ${(Date.now() - startTime)/1000}s`);
+      
+      // Extract content from response
+      const responseContent = completion.data.choices[0].message.content;
+      return responseContent;
+    } catch (error) {
+      console.error(`[LOG chat_with_topic] ========= Error with OpenAI API:`, error);
+      // Return a helpful message if the API fails
+      return `I encountered an error while processing your request. Please try again in a moment.
+
+Error details: ${error.message}`;
+    }
+  } catch (error) {
+    console.error('[LOG chat_with_topic] ========= Error in chat function:', error);
+    throw new Error(`Failed to generate chat response: ${error.message}`);
+  }
+};
+
 module.exports = {
   generateNote,
   calculateReadTime,
   indexMaterials,
-  generateMockNote
+  generateMockNote,
+  chatWithTopic
 }; 

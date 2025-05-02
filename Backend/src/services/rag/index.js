@@ -4,6 +4,7 @@
  */
 
 const noteGenerator = require('./models/noteGenerator');
+const quizGenerator = require('./models/quizGenerator');
 const documentProcessor = require('./utils/documentProcessor');
 const vectorStore = require('./utils/vectorStore');
 
@@ -14,6 +15,15 @@ const vectorStore = require('./utils/vectorStore');
  */
 const generateNote = async (params) => {
   return await noteGenerator.generateNote(params);
+};
+
+/**
+ * Generate an educational quiz using RAG
+ * @param {Object} params - Quiz generation parameters
+ * @returns {Promise<Object>} - Generated quiz with questions
+ */
+const generateQuiz = async (params) => {
+  return await quizGenerator.generateQuiz(params);
 };
 
 /**
@@ -104,11 +114,30 @@ const extractTextFromMaterial = async (filePath, fileType) => {
   }
 };
 
+/**
+ * Handles a chat conversation with context from materials in a topic
+ * @param {string} message - User message
+ * @param {string} userId - User ID
+ * @param {string|null} topicId - Topic ID (optional)
+ * @param {Array} previousMessages - Previous messages in the conversation
+ * @returns {Promise<string>} - Assistant response
+ */
+const chatWithTopic = async (message, userId, topicId = null, previousMessages = []) => {
+  return await noteGenerator.chatWithTopic({
+    message,
+    userId,
+    topicId,
+    previousMessages
+  });
+};
+
 module.exports = {
   generateNote,
+  generateQuiz,
   indexMaterials,
   searchMaterials,
   deleteIndexedMaterials,
   listUserCollections,
-  extractTextFromMaterial
+  extractTextFromMaterial,
+  chatWithTopic
 }; 

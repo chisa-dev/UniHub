@@ -1,5 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
 const sequelize = require('../config/database');
+const ragService = require('../services/rag');
 
 const getQuizzes = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
@@ -205,88 +206,131 @@ const getQuizzesByTopic = async (req, res) => {
   }
 };
 
-const createQuiz = async (req, res) => {
-  const { title, description, topicId, questions, isAiGenerated = false } = req.body;
-
+const createRagQuiz = async (req, res) => {
   try {
-    const quizId = uuidv4();
+    const { title, difficulty, numQuestions, topicId } = req.body;
     
-    // Create quiz
-    await sequelize.query(
-      `INSERT INTO quizzes (id, title, description, topic_id, user_id, is_ai_generated) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
+    // Validate required fields
+    if (!title || !topicId) {
+      return res.status(400).json({ message: 'Title and topic ID are required' });
+    }
+    
+    // Set defaults for optional fields
+    const quizDifficulty = difficulty || 'medium';
+    const questionCount = parseInt(numQuestions) || 5;
+    
+    // Verify topic exists and belongs to user
+    const [topic] = await sequelize.query(
+      'SELECT id FROM topics WHERE id = ? AND user_id = ?',
       {
-        replacements: [quizId, title, description, topicId, req.user.id, isAiGenerated],
+        replacements: [topicId, req.user.id],
+        type: sequelize.QueryTypes.SELECT,
       }
     );
-
-    // Create questions
-    for (const q of questions) {
-      // Check if we have the quiz_question_options table
-      try {
-        // First insert the question
-        const questionId = uuidv4();
-        await sequelize.query(
-          `INSERT INTO quiz_questions (id, quiz_id, question, question_type, correct_answer, explanation) 
-           VALUES (?, ?, ?, ?, ?, ?)`,
-          {
-            replacements: [
-              questionId,
-              quizId,
-              q.question,
-              q.questionType,
-              q.correctAnswer,
-              q.explanation || null
-            ],
-          }
-        );
-
-        // If options exist, insert them separately
-        if (q.options && q.options.length > 0) {
-          try {
-            // Try to insert into quiz_question_options table
-            for (let i = 0; i < q.options.length; i++) {
-              await sequelize.query(
-                `INSERT INTO quiz_question_options (id, question_id, option_text, is_correct) 
-                 VALUES (?, ?, ?, ?)`,
-                {
-                  replacements: [
-                    uuidv4(),
-                    questionId,
-                    q.options[i],
-                    q.options[i] === q.correctAnswer // Set is_correct flag
-                  ],
-                }
-              );
-            }
-          } catch (optionError) {
-            console.error('[LOG quiz] ========= Error inserting options:', optionError);
-            // Continue with quiz creation even if options fail
-          }
+    
+    if (!topic) {
+      return res.status(404).json({ message: 'Topic not found or does not belong to user' });
+    }
+    
+    // Generate quiz using RAG service
+    const generatedQuiz = await ragService.generateQuiz({
+      title,
+      difficulty: quizDifficulty,
+      numQuestions: questionCount,
+      userId: req.user.id,
+      topicId
+    });
+    
+    if (!generatedQuiz || !generatedQuiz.questions || generatedQuiz.questions.length === 0) {
+      return res.status(500).json({ message: 'Failed to generate quiz questions' });
+    }
+    
+    // Store the quiz in the database
+    const quizId = generatedQuiz.quiz.id;
+    
+    // Create a simple JSON for the questions column
+    const questionsJson = JSON.stringify({ 
+      count: generatedQuiz.questions.length, 
+      type: 'rag_generated'  
+    });
+    
+    // Insert quiz
+    await sequelize.query(
+      `INSERT INTO quizzes (id, title, description, topic_id, user_id, difficulty, is_public, is_ai_generated, questions, created_at, updated_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      {
+        replacements: [
+          quizId,
+          generatedQuiz.quiz.title,
+          generatedQuiz.quiz.description,
+          topicId,
+          req.user.id,
+          quizDifficulty,
+          false, // is_public
+          true,  // is_ai_generated
+          questionsJson
+        ],
+      }
+    );
+    
+    // Insert questions and options
+    for (const question of generatedQuiz.questions) {
+      const questionId = question.id || uuidv4();
+      
+      // Insert question
+      await sequelize.query(
+        `INSERT INTO quiz_questions (id, quiz_id, question, question_type, correct_answer, order_index, created_at, updated_at) 
+         VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        {
+          replacements: [
+            questionId,
+            quizId,
+            question.question,
+            question.questionType || 'multiple_choice',
+            question.correctAnswer,
+            0, // order_index
+          ],
         }
-      } catch (questionError) {
-        console.error('[LOG quiz] ========= Error creating question:', questionError);
-        throw questionError; // Rethrow to be caught by main try/catch
+      );
+      
+      // Insert options
+      if (question.options && Array.isArray(question.options)) {
+        for (let i = 0; i < question.options.length; i++) {
+          const optionId = uuidv4();
+          const optionText = question.options[i];
+          const isCorrect = optionText === question.correctAnswer;
+          
+          await sequelize.query(
+            `INSERT INTO quiz_question_options (id, question_id, option_text, is_correct, order_index, created_at, updated_at) 
+             VALUES (?, ?, ?, ?, ?, NOW(), NOW())`,
+            {
+              replacements: [
+                optionId,
+                questionId,
+                optionText,
+                isCorrect,
+                i,
+              ],
+            }
+          );
+        }
       }
     }
-
-    // Create initial progress record with 0%
-    const progressId = uuidv4();
-    await sequelize.query(
-      `INSERT INTO quiz_progress (id, user_id, quiz_id, progress, best_score, attempts_count, last_attempt_date) 
-       VALUES (?, ?, ?, 0, NULL, 0, NULL)`,
-      {
-        replacements: [progressId, req.user.id, quizId],
-      }
-    );
-
+    
     res.status(201).json({
-      message: 'Quiz created successfully',
-      quizId
+      message: 'Quiz generated successfully',
+      quiz: {
+        id: quizId,
+        title: generatedQuiz.quiz.title,
+        description: generatedQuiz.quiz.description,
+        difficulty: quizDifficulty,
+        topic_id: topicId,
+        question_count: generatedQuiz.questions.length
+      }
     });
   } catch (error) {
-    console.error('[LOG quiz] ========= Error creating quiz:', error);
-    res.status(500).json({ message: 'Error creating quiz' });
+    console.error('[LOG quiz] ========= Error generating RAG quiz:', error);
+    res.status(500).json({ message: 'Error generating RAG quiz' });
   }
 };
 
@@ -295,6 +339,11 @@ const submitQuizAttempt = async (req, res) => {
   const quizId = req.params.id;
 
   try {
+    // Validate input
+    if (!answers || typeof answers !== 'object') {
+      return res.status(400).json({ message: 'Invalid answers format. Answers must be an object.' });
+    }
+
     // Get questions with correct answers
     const questions = await sequelize.query(
       'SELECT id, correct_answer FROM quiz_questions WHERE quiz_id = ?',
@@ -318,21 +367,63 @@ const submitQuizAttempt = async (req, res) => {
 
     const scorePercentage = (score / questions.length) * 100;
 
+    // Check if 'answers' column exists in quiz_attempts table
+    try {
+      const [columns] = await sequelize.query(
+        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'quiz_attempts' AND COLUMN_NAME = 'answers'"
+      );
+      
+      // If 'answers' column doesn't exist, add it
+      if (columns.length === 0) {
+        console.log('[LOG quiz] ========= Adding answers column to quiz_attempts table');
+        await sequelize.query("ALTER TABLE quiz_attempts ADD COLUMN answers JSON");
+      }
+    } catch (schemaError) {
+      console.error('[LOG quiz] ========= Error checking/updating schema:', schemaError);
+      // Continue anyway, the main query will fail if the column doesn't exist
+    }
+
     // Save attempt
     const attemptId = uuidv4();
-    await sequelize.query(
-      `INSERT INTO quiz_attempts (id, user_id, quiz_id, score, answers, completed_at) 
-       VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
-      {
-        replacements: [
-          attemptId,
-          req.user.id,
-          quizId,
-          scorePercentage,
-          JSON.stringify(answers)
-        ],
+    
+    try {
+      await sequelize.query(
+        `INSERT INTO quiz_attempts (id, user_id, quiz_id, score, answers, completed_at) 
+         VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+        {
+          replacements: [
+            attemptId,
+            req.user.id,
+            quizId,
+            scorePercentage,
+            JSON.stringify(answers)
+          ],
+        }
+      );
+    } catch (insertError) {
+      console.error('[LOG quiz] ========= Error inserting quiz attempt:', insertError);
+      
+      // Try a simplified insert without the answers column if that's the issue
+      if (insertError.message && insertError.message.includes("Unknown column 'answers'")) {
+        await sequelize.query(
+          `INSERT INTO quiz_attempts (id, user_id, quiz_id, score, completed_at) 
+           VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+          {
+            replacements: [
+              attemptId,
+              req.user.id,
+              quizId,
+              scorePercentage
+            ],
+          }
+        );
+        
+        console.log('[LOG quiz] ========= Quiz attempt saved without answers');
+      } else {
+        // Re-throw if it's not the specific error we're handling
+        throw insertError;
       }
-    );
+    }
 
     res.json({
       message: 'Quiz attempt submitted successfully',
@@ -372,7 +463,7 @@ module.exports = {
   getQuizzes,
   getQuiz,
   getQuizzesByTopic,
-  createQuiz,
+  createRagQuiz,
   submitQuizAttempt,
   getQuizAttempts
 }; 

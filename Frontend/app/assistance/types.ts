@@ -14,7 +14,7 @@ export interface ChatContext {
 export interface SendMessageRequest {
   message: string;
   context: {
-    topicId: string;
+    topicId?: string;
     previousMessages: {
       role: 'user' | 'assistant';
       content: string;
@@ -25,4 +25,5 @@ export interface SendMessageRequest {
 export interface SendMessageResponse {
   message: string;
   timestamp: Date;
+  response?: string;
 } 

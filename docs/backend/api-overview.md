@@ -1,6 +1,6 @@
-# API Overview
+# API Reference
 
-This document provides an overview of the RESTful API services provided by the UniHub backend.
+This document provides a comprehensive reference for the RESTful API services provided by the UniHub backend.
 
 ## API Base URL
 
@@ -58,6 +58,7 @@ The API is documented using Swagger/OpenAPI. You can access the interactive docu
 |--------|----------|-------------|------------------------|
 | GET | `/api/quizzes` | Get all quizzes | Yes |
 | POST | `/api/quizzes` | Create a new quiz | Yes |
+| POST | `/api/quizzes/rag` | Generate AI quiz using RAG | Yes |
 | GET | `/api/quizzes/:id` | Get a specific quiz | Yes |
 | PUT | `/api/quizzes/:id` | Update a quiz | Yes |
 | DELETE | `/api/quizzes/:id` | Delete a quiz | Yes |
@@ -69,43 +70,42 @@ The API is documented using Swagger/OpenAPI. You can access the interactive docu
 | Method | Endpoint | Description | Authentication Required |
 |--------|----------|-------------|------------------------|
 | GET | `/api/notes` | Get all notes | Yes |
-| POST | `/api/notes` | Create a new note | Yes |
+| POST | `/api/notes` | Create a new note (supports AI generation) | Yes |
 | GET | `/api/notes/:id` | Get a specific note | Yes |
 | PUT | `/api/notes/:id` | Update a note | Yes |
 | DELETE | `/api/notes/:id` | Delete a note | Yes |
-| POST | `/api/notes/:id/share` | Share a note with other users | Yes |
+| GET | `/api/notes/topic/:topicId` | Get notes for a specific topic | Yes |
 
-### Calendar
-
-| Method | Endpoint | Description | Authentication Required |
-|--------|----------|-------------|------------------------|
-| GET | `/api/calendar/events` | Get all calendar events | Yes |
-| POST | `/api/calendar/events` | Create a new calendar event | Yes |
-| GET | `/api/calendar/events/:id` | Get a specific calendar event | Yes |
-| PUT | `/api/calendar/events/:id` | Update a calendar event | Yes |
-| DELETE | `/api/calendar/events/:id` | Delete a calendar event | Yes |
-
-### Tutoring
+### Learning Materials
 
 | Method | Endpoint | Description | Authentication Required |
 |--------|----------|-------------|------------------------|
-| GET | `/api/tutoring/sessions` | Get all tutoring sessions | Yes |
-| POST | `/api/tutoring/sessions` | Create a new tutoring session | Yes |
-| GET | `/api/tutoring/sessions/:id` | Get a specific tutoring session | Yes |
-| PUT | `/api/tutoring/sessions/:id` | Update a tutoring session | Yes |
-| DELETE | `/api/tutoring/sessions/:id` | Delete a tutoring session | Yes |
-| GET | `/api/tutoring/tutors` | Get all available tutors | Yes |
-| GET | `/api/tutoring/tutors/:id` | Get a specific tutor's details | Yes |
+| GET | `/api/materials` | Get all learning materials | Yes |
+| POST | `/api/materials` | Upload a new material | Yes |
+| GET | `/api/materials/:id` | Get a specific material | Yes |
+| GET | `/api/materials/download/:id` | Download a material | Yes |
+| DELETE | `/api/materials/:id` | Delete a material | Yes |
+| GET | `/api/materials/topic/:topicId` | Get materials for a specific topic | Yes |
 
-
-### AI Assistant
+### Statistics
 
 | Method | Endpoint | Description | Authentication Required |
 |--------|----------|-------------|------------------------|
-| POST | `/api/ai-assistant/chat` | Send a message to the AI assistant | Yes |
-| POST | `/api/ai-assistant/generate-quiz` | Generate a quiz with AI | Yes |
-| POST | `/api/ai-assistant/summarize` | Summarize content with AI | Yes |
-| POST | `/api/ai-assistant/recommend` | Get AI-powered recommendations | Yes |
+| GET | `/api/statistics` | Get user learning statistics | Yes |
+| POST | `/api/statistics/study-sessions` | Log a study session | Yes |
+| GET | `/api/statistics/quiz-performance` | Get quiz performance stats | Yes |
+
+### RAG Service
+
+| Method | Endpoint | Description | Authentication Required |
+|--------|----------|-------------|------------------------|
+| POST | `/api/rag/index/:topicId` | Index materials for a topic | Yes |
+| DELETE | `/api/rag/index/:topicId` | Delete indexed materials for a topic | Yes |
+| GET | `/api/rag/search` | Search through indexed materials | Yes |
+| POST | `/api/rag/chat` | Chat with your learning materials | Yes |
+| POST | `/api/rag/notes` | Generate notes from materials | Yes |
+| GET | `/api/rag/indexed-topics` | List all indexed topics for a user | Yes |
+| GET | `/api/rag/extract/:materialId` | Extract text from a material | Yes |
 
 ## Response Format
 
@@ -157,14 +157,6 @@ API requests are rate-limited to ensure fair usage and system stability:
 - 1000 requests per hour per user
 
 Exceeding these limits will result in a 429 (Too Many Requests) response.
-
-## Versioning
-
-The current API version is v1, which is implicit in the endpoints. Future versions will use explicit versioning in the URL:
-
-```
-/api/v2/resource
-```
 
 ## Cross-Origin Resource Sharing (CORS)
 

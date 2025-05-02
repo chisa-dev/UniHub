@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
 const { Op } = require('sequelize');
+const ragService = require('../services/rag'); // Add RAG service import
 
 // Set up storage for uploaded files
 const storage = multer.diskStorage({
@@ -115,6 +116,16 @@ exports.uploadMaterial = async (req, res) => {
       // Generate file URL
       const fileUrl = `${req.protocol}://${req.get('host')}/materials/${req.file.filename}`;
 
+      // Index the newly uploaded material for RAG retrieval
+      try {
+        console.log(`[LOG material_upload] ========= Indexing material ${material.id} for topic ${topicId}`);
+        // Index the material immediately in background
+        indexMaterialInBackground(material, req.user.id, topicId);
+      } catch (indexError) {
+        console.error('[LOG material_upload] ========= Error while setting up material indexing:', indexError);
+        // Don't fail the upload if indexing setup fails
+      }
+
       res.status(201).json({
         message: 'Material uploaded successfully',
         material: {
@@ -129,6 +140,39 @@ exports.uploadMaterial = async (req, res) => {
       message: 'Error uploading material',
       error: error.message
     });
+  }
+};
+
+/**
+ * Index a material in the background to avoid blocking the upload response
+ * @param {Object} material - The material object to index
+ * @param {string} userId - User ID
+ * @param {string} topicId - Topic ID
+ */
+const indexMaterialInBackground = async (material, userId, topicId) => {
+  try {
+    // Create a collection name using the same format as in the RAG service
+    const collectionName = `user_${userId}_topic_${topicId}`;
+    
+    console.log(`[LOG material_index] ========= Starting background indexing for material ${material.id} in collection ${collectionName}`);
+    
+    // Call the indexMaterials function with just this material
+    const indexResult = await ragService.indexMaterials([material], userId, topicId);
+    
+    if (indexResult.success) {
+      console.log(`[LOG material_index] ========= Successfully indexed material ${material.id} for topic ${topicId}`);
+      console.log(`[LOG material_index] ========= Index result: ${JSON.stringify({
+        collectionName: indexResult.collectionName,
+        materialsAdded: indexResult.materialsAdded,
+        collectionCreated: indexResult.collectionCreated,
+        collectionExisted: indexResult.collectionExisted
+      })}`);
+    } else {
+      console.error(`[LOG material_index] ========= Failed to index material ${material.id} for topic ${topicId}`);
+      console.error(`[LOG material_index] ========= Error: ${indexResult.error || JSON.stringify(indexResult.errors)}`);
+    }
+  } catch (error) {
+    console.error(`[LOG material_index] ========= Error indexing material ${material?.id || 'unknown'} in background:`, error);
   }
 };
 

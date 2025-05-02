@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 
 interface TopicHeaderProps {
   title: string;
-  filesCount?: number;
+  materialsCount?: number;
   description?: string;
 }
 
 const TopicHeader: React.FC<TopicHeaderProps> = ({ 
   title, 
-  filesCount = 0, 
+  materialsCount = 0, 
   description 
 }) => {
   const router = useRouter();
@@ -34,7 +34,7 @@ const TopicHeader: React.FC<TopicHeaderProps> = ({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 text-sm">
               <PiFile className="text-primaryColor" />
-              <span>{filesCount} {filesCount === 1 ? 'file' : 'files'}</span>
+              <span>{materialsCount} {materialsCount === 1 ? 'material' : 'materials'}</span>
             </div>
             
             {description && (

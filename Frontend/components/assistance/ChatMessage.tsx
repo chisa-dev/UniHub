@@ -42,12 +42,16 @@ const MarkdownComponents = {
       </code>
     );
   },
-  table: (props: any) => <table className="min-w-full divide-y divide-gray-300 my-3 text-xs" {...props} />,
+  table: (props: any) => (
+    <div className="overflow-x-auto my-4 rounded-md border border-gray-200 dark:border-gray-700">
+      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700" {...props} />
+    </div>
+  ),
   thead: (props: any) => <thead className="bg-gray-100 dark:bg-gray-800" {...props} />,
-  th: (props: any) => <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" {...props} />,
-  tbody: (props: any) => <tbody className="divide-y divide-gray-200 dark:divide-gray-700" {...props} />,
-  tr: (props: any) => <tr className="hover:bg-gray-50 dark:hover:bg-gray-900" {...props} />,
-  td: (props: any) => <td className="px-2 py-1.5 whitespace-nowrap text-xs" {...props} />,
+  th: (props: any) => <th className="px-3 py-2 text-left text-xs font-medium text-gray-600 dark:text-gray-300 uppercase tracking-wider border-b border-r border-gray-200 dark:border-gray-700 last:border-r-0" {...props} />,
+  tbody: (props: any) => <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700" {...props} />,
+  tr: (props: any) => <tr className="hover:bg-gray-50 dark:hover:bg-gray-800" {...props} />,
+  td: (props: any) => <td className="px-3 py-2 text-xs border-r border-gray-200 dark:border-gray-700 last:border-r-0" {...props} />,
 };
 
 interface ChatMessageProps {
@@ -118,19 +122,49 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             <div>
               <TextAnimation 
                 text={message.content} 
-                speed={15} 
+                speed={3} 
+                batchSize={8}
                 onComplete={() => setIsAnimating(false)} 
               />
             </div>
           ) : (
-            <div className="prose prose-sm dark:prose-invert max-w-none">
-              <ReactMarkdown
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeHighlight, rehypeKatex]}
-                components={MarkdownComponents}
-              >
-                {renderedContent}
-              </ReactMarkdown>
+            <div className="markdown-wrapper w-full overflow-hidden">
+              <div className="prose prose-sm dark:prose-invert max-w-none overflow-x-auto break-words">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm, remarkMath]}
+                  rehypePlugins={[rehypeHighlight, rehypeKatex]}
+                  components={MarkdownComponents}
+                >
+                  {renderedContent}
+                </ReactMarkdown>
+              </div>
+              <style jsx global>{`
+                .markdown-wrapper table {
+                  display: table;
+                  width: 100%;
+                  border-collapse: separate;
+                  border-spacing: 0;
+                  overflow-x: auto;
+                  white-space: normal;
+                }
+                
+                .markdown-wrapper td,
+                .markdown-wrapper th {
+                  word-break: normal;
+                  white-space: nowrap;
+                }
+                
+                .markdown-wrapper .math-inline {
+                  display: inline-flex;
+                  align-items: center;
+                }
+                
+                .markdown-wrapper .math-display {
+                  display: block;
+                  overflow-x: auto;
+                  max-width: 100%;
+                }
+              `}</style>
             </div>
           )}
         </div>

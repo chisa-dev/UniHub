@@ -378,11 +378,92 @@ const extractTextFromMaterial = async (req, res) => {
   }
 };
 
+/**
+ * Chat with context from topic materials
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @returns {Object} - Chat response
+ */
+const chatWithContext = async (req, res) => {
+  try {
+    const { message, context = {} } = req.body;
+    const userId = req.user.id;
+    
+    // Validate required fields
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    
+    const { topicId = null, previousMessages = [] } = context;
+    let topicTitle = null;
+    
+    // If topicId is provided, verify it belongs to user
+    if (topicId) {
+      const topic = await db.Topic.findOne({ 
+        where: { id: topicId, user_id: userId },
+        attributes: ['id', 'title']
+      });
+      
+      if (!topic) {
+        return res.status(404).json({ error: 'Topic not found' });
+      }
+      
+      topicTitle = topic.title;
+
+      // Check if materials exist for this topic
+      const materialsCount = await db.Material.count({ 
+        where: { topic_id: topicId, user_id: userId } 
+      });
+      
+      if (materialsCount === 0) {
+        return res.status(400).json({ 
+          error: 'No materials found for this topic. Please upload materials before using the chat feature.' 
+        });
+      }
+    }
+
+    // Log the request
+    console.log(`[LOG rag_controller] ========= Chat request ${topicId ? `for topic ${topicId}` : '(general chat)'}, message: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
+    console.log(`[LOG rag_controller] ========= Chat has ${previousMessages.length} previous messages`);
+    
+    const startTime = Date.now();
+    
+    // Generate chat response
+    const response = await ragService.chatWithTopic(
+      message, 
+      userId, 
+      topicId, 
+      previousMessages
+    );
+    
+    const elapsedTime = (Date.now() - startTime) / 1000;
+    console.log(`[LOG rag_controller] ========= Chat response generated in ${elapsedTime.toFixed(2)} seconds`);
+
+    // Create response object
+    const responseObject = {
+      message: response,
+      topicId: topicId,
+      topicTitle: topicTitle,
+      timestamp: new Date().toISOString()
+    };
+
+    res.json(responseObject);
+  } catch (error) {
+    console.error('[LOG rag_controller] ========= Error generating chat response:', error);
+    res.status(500).json({ error: `Failed to generate chat response: ${error.message}` });
+  }
+};
+
 // Validation rules
 const generateNoteValidation = [
   check('title').notEmpty().withMessage('Title is required'),
   check('userGoal').notEmpty().withMessage('User goal is required'),
   check('topicId').notEmpty().withMessage('Topic ID is required')
+];
+
+// Chat validation rules
+const chatValidation = [
+  check('message').notEmpty().withMessage('Message is required')
 ];
 
 module.exports = {
@@ -392,5 +473,7 @@ module.exports = {
   indexMaterials,
   deleteIndexedMaterials,
   listIndexedTopics,
-  extractTextFromMaterial
+  extractTextFromMaterial,
+  chatWithContext,
+  chatValidation
 }; 
