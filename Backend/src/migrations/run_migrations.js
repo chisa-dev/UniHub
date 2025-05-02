@@ -16,11 +16,11 @@ async function runSingleFile(filePath) {
     
     // Load environment variables
     const {
-      DB_HOST = 'localhost',
-      DB_USER = 'root',
-      DB_PASSWORD = '',
-      DB_NAME = 'unihub_db',
-      DB_PORT = '3306',
+      DB_HOST =  process.env.DB_HOST,
+      DB_USER =  process.env.DB_USER,
+      DB_PASSWORD =  process.env.DB_PASSWORD,
+      DB_NAME =  process.env.DB_NAME,
+      DB_PORT =  process.env.DB_PORT,
     } = process.env;
     
     console.log(`[LOG migration] ========= Connecting to database ${DB_NAME} at ${DB_HOST}`);
