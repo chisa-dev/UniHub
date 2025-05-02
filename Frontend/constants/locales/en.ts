@@ -6,7 +6,7 @@ export const en = {
     calendar: "Calendar",
     insights: "Insights",
     testsQuizfetch: "Tests & Quiz",
-    tutorMe: "Tutor Me",
+    tutorMe: "Note Summary",
     audioRecap: "Audio Recap",
     notesMaterials: "Notes and Materials",
     help: "Help",

@@ -7,6 +7,48 @@ import { formatDistanceToNow } from 'date-fns';
 import { Message } from "@/app/assistance/types";
 import TextAnimation from "@/components/ui/TextAnimation";
 import TypingAnimation from "@/components/ui/TypingAnimation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
+import 'katex/dist/katex.min.css';
+
+// Custom components for ReactMarkdown
+const MarkdownComponents = {
+  h1: (props: any) => <h1 className="text-xl font-semibold my-3" {...props} />,
+  h2: (props: any) => <h2 className="text-lg font-semibold my-2" {...props} />,
+  h3: (props: any) => <h3 className="text-base font-medium my-2" {...props} />,
+  h4: (props: any) => <h4 className="text-sm font-medium my-1" {...props} />,
+  p: (props: any) => <p className="my-2 leading-relaxed" {...props} />,
+  ul: (props: any) => <ul className="list-disc list-inside my-2 ml-4" {...props} />,
+  ol: (props: any) => <ol className="list-decimal list-inside my-2 ml-4" {...props} />,
+  li: (props: any) => <li className="my-1" {...props} />,
+  a: (props: any) => <a className="text-primaryColor hover:underline" {...props} />,
+  blockquote: (props: any) => <blockquote className="border-l-4 border-primaryColor/30 pl-4 my-3 italic text-gray-600 dark:text-gray-300" {...props} />,
+  code: ({ node, inline, className, children, ...props }: any) => {
+    const match = /language-(\w+)/.exec(className || '');
+    return !inline && match ? (
+      <div className="my-3 overflow-auto rounded-md">
+        <pre className={`${className} bg-gray-100 dark:bg-gray-800 p-3 rounded-md text-xs`}>
+          <code className={className} {...props}>
+            {children}
+          </code>
+        </pre>
+      </div>
+    ) : (
+      <code className="bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-xs" {...props}>
+        {children}
+      </code>
+    );
+  },
+  table: (props: any) => <table className="min-w-full divide-y divide-gray-300 my-3 text-xs" {...props} />,
+  thead: (props: any) => <thead className="bg-gray-100 dark:bg-gray-800" {...props} />,
+  th: (props: any) => <th className="px-2 py-1.5 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider" {...props} />,
+  tbody: (props: any) => <tbody className="divide-y divide-gray-200 dark:divide-gray-700" {...props} />,
+  tr: (props: any) => <tr className="hover:bg-gray-50 dark:hover:bg-gray-900" {...props} />,
+  td: (props: any) => <td className="px-2 py-1.5 whitespace-nowrap text-xs" {...props} />,
+};
 
 interface ChatMessageProps {
   message: Message;
@@ -21,6 +63,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [isAnimating, setIsAnimating] = useState(true);
+  const [renderedContent, setRenderedContent] = useState<string>('');
   
   // Format the timestamp
   const formattedTime = message.timestamp 
@@ -40,11 +83,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
     }
   }, [message.role]);
   
+  // When animation completes, set the full content for markdown rendering
+  useEffect(() => {
+    if (!isAnimating) {
+      setRenderedContent(message.content);
+    }
+  }, [isAnimating, message.content]);
+  
   if (message.role === "user") {
     return (
       <div className="flex flex-col justify-end items-end gap-3">
         <p className="text-xs text-n100">{formattedTime}</p>
-        <div className="text-sm bg-infoColor/10 py-3 px-5 border border-infoColor/20 rounded-xl shadow-sm">
+        <div className="text-sm bg-infoColor/10 py-3 px-5 border border-infoColor/20 rounded-xl shadow-sm max-w-full overflow-hidden">
           <p>{message.content}</p>
         </div>
       </div>
@@ -53,26 +103,35 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   
   return (
     <div className="flex justify-start items-start gap-1 sm:gap-3 w-full max-w-[90%]">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primaryColor to-secondaryColor flex items-center justify-center">
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primaryColor to-secondaryColor flex items-center justify-center flex-shrink-0">
         <Image src={logo} alt="UniHub Logo" width={20} height={20} className="object-cover" />
       </div>
       <div className="flex flex-col justify-start items-start gap-3 flex-1">
         <p className="text-xs text-n100">UniHub, {formattedTime}</p>
-        <div className="text-sm bg-gradient-to-r from-primaryColor/5 to-transparent py-3 px-5 border border-primaryColor/20 rounded-xl shadow-sm w-full sm:max-w-[90%]">
-          <div className="flex items-center gap-2 mb-1">
+        <div className="text-sm bg-gradient-to-r from-primaryColor/5 to-transparent py-3 px-5 border border-primaryColor/20 rounded-xl shadow-sm w-full sm:max-w-[95%]">
+          <div className="flex items-center gap-2 mb-2">
             <PiRobot className="text-primaryColor" />
             <span className="text-xs font-medium">AI Assistant</span>
           </div>
+          
           {isAnimating && animated ? (
-            <p>
+            <div>
               <TextAnimation 
                 text={message.content} 
                 speed={15} 
                 onComplete={() => setIsAnimating(false)} 
               />
-            </p>
+            </div>
           ) : (
-            <p>{message.content}</p>
+            <div className="prose prose-sm dark:prose-invert max-w-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeHighlight, rehypeKatex]}
+                components={MarkdownComponents}
+              >
+                {renderedContent}
+              </ReactMarkdown>
+            </div>
           )}
         </div>
         {!isGreeting && !isAnimating && (

@@ -13,10 +13,10 @@ const topicRoutes = require('./routes/topic.routes');
 const quizRoutes = require('./routes/quiz.routes');
 const noteRoutes = require('./routes/note.routes');
 const calendarRoutes = require('./routes/calendar.routes');
-const aiAssistantRoutes = require('./routes/ai-assistant.routes');
 const statusRoutes = require('./routes/status.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const materialRoutes = require('./routes/material.routes');
+const ragRoutes = require('./routes/rag.routes');
 
 const app = express();
 
@@ -115,9 +115,10 @@ app.use('/api/quizzes', quizRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/calendar', calendarRoutes);
 
-app.use('/api/ai-assistant', aiAssistantRoutes);
+
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/materials', materialRoutes);
+app.use('/api/rag', ragRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

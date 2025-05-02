@@ -542,7 +542,7 @@ export const explorePageData = [
       },
       {
         id: uuidv4(),
-        title: "Tutor Me",
+        title: "Note Summary",
         desc: "Your personal AI tutor by Khan Academy! I'm Khanmigo Lite - here to help you with math, science, and—a powerful text-to-speech video generator.",
         icon: icon4,
       },

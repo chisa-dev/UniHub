@@ -1,6 +1,12 @@
 const { v4: uuidv4 } = require('uuid');
 const sequelize = require('../config/database');
+const db = require('../models');
+const ragService = require('../services/rag');
+const { format } = require('date-fns');
 
+/**
+ * Get all notes for the current user
+ */
 const getNotes = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -29,7 +35,7 @@ const getNotes = async (req, res) => {
 
     // Get notes
     const notes = await sequelize.query(
-      `SELECT n.*, t.title as topic_title, u.username as creator_name
+      `SELECT n.*, t.title as topic, u.username as creator_name
        FROM notes n
        LEFT JOIN topics t ON n.topic_id = t.id
        LEFT JOIN users u ON n.user_id = u.id
@@ -42,8 +48,22 @@ const getNotes = async (req, res) => {
       }
     );
 
+    // Format notes to match the required response format
+    const formattedNotes = notes.map(note => ({
+      id: note.id,
+      title: note.title,
+      topic: note.topic || 'Uncategorized',
+      topicId: note.topic_id,
+      date: format(new Date(note.created_at), 'MMM d, yyyy'),
+      content: note.content,
+      readTime: note.read_time || '3 min read',
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      user_id: note.user_id
+    }));
+
     res.json({
-      notes,
+      notes: formattedNotes,
       pagination: {
         total: countResult.total,
         page,
@@ -51,15 +71,18 @@ const getNotes = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching notes:', error);
+    console.error('[LOG getNotes] ========= Error fetching notes:', error);
     res.status(500).json({ message: 'Error fetching notes' });
   }
 };
 
+/**
+ * Get a specific note by ID
+ */
 const getNote = async (req, res) => {
   try {
     const [note] = await sequelize.query(
-      `SELECT n.*, t.title as topic_title, u.username as creator_name
+      `SELECT n.*, t.title as topic, u.username as creator_name
        FROM notes n
        LEFT JOIN topics t ON n.topic_id = t.id
        LEFT JOIN users u ON n.user_id = u.id
@@ -74,13 +97,31 @@ const getNote = async (req, res) => {
       return res.status(404).json({ message: 'Note not found' });
     }
 
-    res.json(note);
+    // Format note to match the required response format
+    const formattedNote = {
+      id: note.id,
+      title: note.title,
+      topic: note.topic || 'Uncategorized',
+      topicId: note.topic_id,
+      date: format(new Date(note.created_at), 'MMM d, yyyy'),
+      content: note.content,
+      readTime: note.read_time || '3 min read',
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      user_id: note.user_id,
+      user_goal: note.user_goal || ''
+    };
+
+    res.json(formattedNote);
   } catch (error) {
-    console.error('Error fetching note:', error);
+    console.error('[LOG getNote] ========= Error fetching note:', error);
     res.status(500).json({ message: 'Error fetching note' });
   }
 };
 
+/**
+ * Get notes for a specific topic
+ */
 const getNotesByTopic = async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
@@ -94,7 +135,7 @@ const getNotesByTopic = async (req, res) => {
     
     // Verify topic exists
     const [topic] = await sequelize.query(
-      'SELECT id FROM topics WHERE id = ?',
+      'SELECT id, title FROM topics WHERE id = ?',
       {
         replacements: [topicId],
         type: sequelize.QueryTypes.SELECT,
@@ -121,9 +162,8 @@ const getNotesByTopic = async (req, res) => {
 
     // Get notes
     const notes = await sequelize.query(
-      `SELECT n.*, t.title as topic_title, u.username as creator_name
+      `SELECT n.*, u.username as creator_name
        FROM notes n
-       LEFT JOIN topics t ON n.topic_id = t.id
        LEFT JOIN users u ON n.user_id = u.id
        ${whereClause}
        ORDER BY n.created_at DESC
@@ -134,8 +174,22 @@ const getNotesByTopic = async (req, res) => {
       }
     );
 
+    // Format notes to match the required response format
+    const formattedNotes = notes.map(note => ({
+      id: note.id,
+      title: note.title,
+      topic: topic.title,
+      topicId: note.topic_id,
+      date: format(new Date(note.created_at), 'MMM d, yyyy'),
+      content: note.content,
+      readTime: note.read_time || '3 min read',
+      created_at: note.created_at,
+      updated_at: note.updated_at,
+      user_id: note.user_id
+    }));
+
     res.json({
-      notes: notes[0],
+      notes: formattedNotes,
       pagination: {
         total: countResult.total,
         page,
@@ -143,46 +197,89 @@ const getNotesByTopic = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error fetching notes by topic:', error);
+    console.error('[LOG getNotesByTopic] ========= Error fetching notes by topic:', error);
     res.status(500).json({ message: 'Error fetching notes by topic' });
   }
 };
 
+/**
+ * Create a new AI-generated note based on user input and materials
+ */
 const createNote = async (req, res) => {
-  const { title, content, topicId, isPrivate = true } = req.body;
+  const { title, user_goal, topicId, isPrivate = true } = req.body;
 
   try {
-    const noteId = uuidv4();
-    await sequelize.query(
-      `INSERT INTO notes (id, title, content, topic_id, user_id, is_private) 
-       VALUES (?, ?, ?, ?, ?, ?)`,
+    // Validate the topic exists
+    const [topic] = await sequelize.query(
+      'SELECT id, title FROM topics WHERE id = ?',
       {
-        replacements: [noteId, title, content, topicId, req.user.id, isPrivate],
+        replacements: [topicId],
+        type: sequelize.QueryTypes.SELECT,
       }
     );
 
-    // Create initial progress record with 0%
-    const progressId = uuidv4();
+    if (!topic) {
+      return res.status(404).json({ message: 'Topic not found' });
+    }
+
+    // Get materials for this topic
+    const materials = await db.Material.findAll({
+      where: { topic_id: topicId },
+      attributes: ['id', 'file_name', 'uploaded_file', 'file_type', 'file_size']
+    });
+
+    console.log(`[LOG createNote] ========= Generating note using RAG service for topic: ${topicId}`);
+    
+    // Generate note using the RAG service
+    const generatedNote = await ragService.generateNote({
+      title,
+      userGoal: user_goal,
+      materials,
+      userId: req.user.id,
+      topicId
+    });
+
+    // Create the note
+    const noteId = uuidv4();
     await sequelize.query(
-      `INSERT INTO note_progress (id, user_id, note_id, progress, last_read_position) 
-       VALUES (?, ?, ?, 0, 0)`,
+      `INSERT INTO notes (id, title, content, topic_id, user_id, is_private, user_goal, read_time) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       {
-        replacements: [progressId, req.user.id, noteId],
+        replacements: [
+          noteId, 
+          title, 
+          generatedNote.content, 
+          topicId, 
+          req.user.id, 
+          isPrivate, 
+          user_goal,
+          generatedNote.readTime
+        ]
       }
     );
 
     res.status(201).json({
       message: 'Note created successfully',
-      noteId
+      note: {
+        id: noteId,
+        title,
+        content: generatedNote.content,
+        topicId,
+        date: format(new Date(), 'MMM d, yyyy'),
+        readTime: generatedNote.readTime
+      }
     });
   } catch (error) {
-    console.error('[LOG notes] ========= Error creating note:', error);
-    res.status(500).json({ message: 'Error creating note' });
+    console.error('[LOG createNote] ========= Error creating note:', error);
+    res.status(500).json({ message: `Error creating note: ${error.message}` });
   }
 };
 
+/**
+ * Update an existing note
+ */
 const updateNote = async (req, res) => {
-  const { title, content, isPrivate } = req.body;
+  const { title, content, user_goal, isPrivate } = req.body;
   const updates = [];
   const values = [];
 
@@ -193,6 +290,13 @@ const updateNote = async (req, res) => {
   if (content !== undefined) {
     updates.push('content = ?');
     values.push(content);
+    // Recalculate read time if content changed
+    updates.push('read_time = ?');
+    values.push(calculateReadTime(content));
+  }
+  if (user_goal !== undefined) {
+    updates.push('user_goal = ?');
+    values.push(user_goal);
   }
   if (isPrivate !== undefined) {
     updates.push('is_private = ?');
@@ -219,13 +323,43 @@ const updateNote = async (req, res) => {
       });
     }
 
-    res.json({ message: 'Note updated successfully' });
+    // Get updated note
+    const [updatedNote] = await sequelize.query(
+      `SELECT n.*, t.title as topic
+       FROM notes n
+       LEFT JOIN topics t ON n.topic_id = t.id
+       WHERE n.id = ?`,
+      {
+        replacements: [req.params.id],
+        type: sequelize.QueryTypes.SELECT,
+      }
+    );
+
+    // Format the response
+    const noteData = {
+      id: updatedNote.id,
+      title: updatedNote.title,
+      topic: updatedNote.topic || 'Uncategorized',
+      topicId: updatedNote.topic_id,
+      date: format(new Date(updatedNote.created_at), 'MMM d, yyyy'),
+      content: updatedNote.content,
+      readTime: updatedNote.read_time || '3 min read',
+      created_at: updatedNote.created_at,
+      updated_at: updatedNote.updated_at,
+      user_id: updatedNote.user_id,
+      user_goal: updatedNote.user_goal || ''
+    };
+
+    res.json(noteData);
   } catch (error) {
-    console.error('Error updating note:', error);
+    console.error('[LOG updateNote] ========= Error updating note:', error);
     res.status(500).json({ message: 'Error updating note' });
   }
 };
 
+/**
+ * Delete a note
+ */
 const deleteNote = async (req, res) => {
   try {
     const [result] = await sequelize.query(
@@ -243,7 +377,7 @@ const deleteNote = async (req, res) => {
 
     res.json({ message: 'Note deleted successfully' });
   } catch (error) {
-    console.error('Error deleting note:', error);
+    console.error('[LOG deleteNote] ========= Error deleting note:', error);
     res.status(500).json({ message: 'Error deleting note' });
   }
 };

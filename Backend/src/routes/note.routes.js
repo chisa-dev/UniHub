@@ -120,7 +120,7 @@ router.get('/:id', auth, noteController.getNote);
  * @swagger
  * /notes:
  *   post:
- *     summary: Create a new note
+ *     summary: Create a new AI-generated note
  *     tags: [Notes]
  *     security:
  *       - bearerAuth: []
@@ -132,28 +132,61 @@ router.get('/:id', auth, noteController.getNote);
  *             type: object
  *             required:
  *               - title
- *               - content
+ *               - user_goal
  *               - topicId
  *             properties:
  *               title:
  *                 type: string
- *               content:
+ *                 description: The note title
+ *               user_goal:
  *                 type: string
+ *                 description: The user's goal for the note
  *               topicId:
  *                 type: string
+ *                 description: The ID of the topic for which to create the note
  *               isPrivate:
  *                 type: boolean
  *                 default: true
+ *                 description: Whether the note is private
  *     responses:
  *       201:
  *         description: Note created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: string
+ *                 title:
+ *                   type: string
+ *                 topic:
+ *                   type: string
+ *                 topicId:
+ *                   type: string
+ *                 date:
+ *                   type: string
+ *                 content:
+ *                   type: string
+ *                 readTime:
+ *                   type: string
+ *                 created_at:
+ *                   type: string
+ *                 updated_at:
+ *                   type: string
+ *                 user_id:
+ *                   type: string
+ *       404:
+ *         description: Topic not found
+ *       500:
+ *         description: Error generating note
  */
 router.post(
   '/',
   [
     auth,
     body('title').trim().notEmpty(),
-    body('content').trim().notEmpty(),
+    body('user_goal').trim().notEmpty(),
     body('topicId').notEmpty(),
     body('isPrivate').optional().isBoolean(),
     validate
@@ -186,6 +219,8 @@ router.post(
  *                 type: string
  *               content:
  *                 type: string
+ *               user_goal:
+ *                 type: string
  *               isPrivate:
  *                 type: boolean
  *     responses:
@@ -200,6 +235,7 @@ router.put(
     auth,
     body('title').optional().trim().notEmpty(),
     body('content').optional().trim().notEmpty(),
+    body('user_goal').optional().trim().notEmpty(),
     body('isPrivate').optional().isBoolean(),
     validate
   ],

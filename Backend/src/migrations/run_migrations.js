@@ -71,7 +71,10 @@ async function runMigrations() {
     path.join(__dirname, 'create_indexes.sql'),
     path.join(__dirname, 'add_is_private_to_notes.sql'),
     path.join(__dirname, 'add_user_relations.sql'),
-    path.join(__dirname, 'update_calendar_fields.sql')
+    path.join(__dirname, 'update_calendar_fields.sql'),
+    path.join(__dirname, 'update_notes_for_ai_generation.sql'),
+    path.join(__dirname, 'add_read_time_to_notes.sql'),
+    path.join(__dirname, 'add_user_goal_to_notes.sql')
   ];
   
   let success = true;

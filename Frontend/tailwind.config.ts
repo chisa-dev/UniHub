@@ -69,7 +69,53 @@ export default {
         'fade-in-down': 'fade-in-down 0.5s ease-out',
         'fade-out-up': 'fade-out-up 0.5s ease-out'
       },
+      typography: {
+        DEFAULT: {
+          css: {
+            color: 'inherit',
+            a: {
+              color: 'rgb(77, 107, 254)',
+              '&:hover': {
+                color: 'rgb(77, 107, 254, 0.8)',
+              },
+            },
+            h1: {
+              color: 'inherit',
+            },
+            h2: {
+              color: 'inherit',
+            },
+            h3: {
+              color: 'inherit',
+            },
+            h4: {
+              color: 'inherit',
+            },
+            code: {
+              color: 'inherit',
+            },
+            pre: {
+              backgroundColor: '#f3f4f6',
+              color: 'inherit',
+            },
+            strong: {
+              color: 'inherit',
+            },
+            blockquote: {
+              color: 'inherit',
+            },
+            'code::before': {
+              content: '""',
+            },
+            'code::after': {
+              content: '""',
+            },
+          },
+        },
+      },
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 } satisfies Config;

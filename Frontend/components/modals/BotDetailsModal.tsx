@@ -182,7 +182,7 @@ function BotDetailsModal() {
               <Image src={icon2} alt="" className="" />
             </div>
             <div className=" flex-1 flex justify-start items-start flex-col">
-              <p className="text-lg font-medium">Tutor Me</p>
+              <p className="text-lg font-medium">Note Summary</p>
               <p className="text-sm pt-3">
                 Your personal AI tutor by Khan Academy! I&apos;m Khanmigo Lite -
                 here to help you with math, science, and—a powerful
