@@ -1,17 +1,18 @@
 const swaggerJsdoc = require('swagger-jsdoc');
+require('dotenv').config();
 
 const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'UniHub API Documentation',
-      version: '1.0.0',
-      description: 'API documentation for UniHub application',
+      title: process.env.API_TITLE || 'UniHub API Documentation',
+      version: process.env.API_VERSION || '1.0.0',
+      description: process.env.API_DESCRIPTION || 'API documentation for UniHub application',
     },
     servers: [
       {
-        url: 'http://localhost:3000/api',
-        description: 'Development server',
+        url: `${process.env.API_URL || 'http://localhost:' + (process.env.PORT || '3000')}${process.env.API_PREFIX || '/api'}`,
+        description: process.env.API_SERVER_DESCRIPTION || 'Development server',
       },
     ],
     components: {

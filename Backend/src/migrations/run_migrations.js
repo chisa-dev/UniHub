@@ -20,6 +20,7 @@ async function runSingleFile(filePath) {
       DB_USER = 'root',
       DB_PASSWORD = '',
       DB_NAME = 'unihub_db',
+      DB_PORT = '3306',
     } = process.env;
     
     console.log(`[LOG migration] ========= Connecting to database ${DB_NAME} at ${DB_HOST}`);
@@ -29,6 +30,7 @@ async function runSingleFile(filePath) {
       host: DB_HOST,
       user: DB_USER,
       password: DB_PASSWORD,
+      port: parseInt(DB_PORT),
       multipleStatements: true
     });
     
@@ -57,7 +59,7 @@ async function runSingleFile(filePath) {
  * @returns {Array<string>} Array of file paths sorted by filename
  */
 function getSqlFiles() {
-  const migrationsDir = __dirname;
+  const migrationsDir = process.env.MIGRATIONS_DIR || __dirname;
   const files = fs.readdirSync(migrationsDir)
     .filter(file => file.endsWith('.sql'))
     .map(file => path.join(migrationsDir, file));

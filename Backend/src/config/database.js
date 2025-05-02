@@ -6,37 +6,37 @@ const config = {
   development: {
     username: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'unihub_db',
+    database: process.env.DB_NAME,
     host: process.env.DB_HOST || '127.0.0.1',
-    dialect: 'mysql',
-    logging: false
+    dialect: process.env.DB_DIALECT || 'mysql',
+    logging: process.env.DB_LOGGING === 'true' ? console.log : false
   },
   test: {
-    username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_NAME || 'unihub_test',
-    host: process.env.DB_HOST || '127.0.0.1',
-    dialect: 'mysql',
-    logging: false
+    username: process.env.TEST_DB_USER || process.env.DB_USER || 'root',
+    password: process.env.TEST_DB_PASSWORD || process.env.DB_PASSWORD || '',
+    database: process.env.TEST_DB_NAME || 'unihub_test',
+    host: process.env.TEST_DB_HOST || process.env.DB_HOST || '127.0.0.1',
+    dialect: process.env.DB_DIALECT || 'mysql',
+    logging: process.env.DB_LOGGING === 'true' ? console.log : false
   },
   production: {
     username: process.env.DB_USER,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
-    dialect: 'mysql',
+    dialect: process.env.DB_DIALECT || 'mysql',
     logging: false,
     dialectOptions: {
       ssl: {
-        require: true,
-        rejectUnauthorized: false
+        require: process.env.DB_SSL === 'true',
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
       }
     },
     pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+      max: parseInt(process.env.DB_POOL_MAX || '5'),
+      min: parseInt(process.env.DB_POOL_MIN || '0'),
+      acquire: parseInt(process.env.DB_POOL_ACQUIRE || '30000'),
+      idle: parseInt(process.env.DB_POOL_IDLE || '10000')
     }
   }
 };
@@ -44,19 +44,19 @@ const config = {
 // Allow using DATABASE_URL environment variable (common in cloud deployments)
 if (process.env.DATABASE_URL && env === 'production') {
   module.exports = new Sequelize(process.env.DATABASE_URL, {
-    dialect: 'mysql',
+    dialect: process.env.DB_DIALECT || 'mysql',
     dialectOptions: {
       ssl: {
-        require: true,
-        rejectUnauthorized: false
+        require: process.env.DB_SSL === 'true',
+        rejectUnauthorized: process.env.DB_SSL_REJECT_UNAUTHORIZED !== 'false'
       }
     },
     logging: false,
     pool: {
-      max: 5,
-      min: 0,
-      acquire: 30000,
-      idle: 10000
+      max: parseInt(process.env.DB_POOL_MAX || '5'),
+      min: parseInt(process.env.DB_POOL_MIN || '0'),
+      acquire: parseInt(process.env.DB_POOL_ACQUIRE || '30000'),
+      idle: parseInt(process.env.DB_POOL_IDLE || '10000')
     }
   });
 } else {
