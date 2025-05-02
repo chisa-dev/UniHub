@@ -7,30 +7,9 @@ import {
   QuizListResponse, 
   QuizWithQuestions, 
   Topic
-}
-from './types';
+} from './types';
 
-// Import Quiz directly
-import type { Quiz } from './types';
-
-// Re-export Quiz for use in other components
-export type { Quiz } from './types';
-
-// Import Quiz directly
-import type { Quiz }
-from './types';
-
-// Import Quiz directly
-import type { Quiz } from './types';
-
-// Re-export Quiz for use in other components
-export type { Quiz } from './types';
-
-// Re-export Quiz for use in other components
-export type { Quiz }
-from './types';
-
-// Import Quiz directly
+// Import Quiz type directly
 import type { Quiz } from './types';
 
 // Re-export Quiz for use in other components
