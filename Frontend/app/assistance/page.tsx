@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { v4 as uuidv4 } from 'uuid';
 import { PiPaperPlaneRight, PiLightning, PiSparkle, PiRobot } from "react-icons/pi";
@@ -14,7 +14,16 @@ import { topicsService } from "../topics/topicsService";
 import Image from "next/image";
 import logo from "@/public/images/favicon.png";
 
-const Assistance = () => {
+// Loading fallback component
+const AssistanceLoading = () => (
+  <div className="flex items-center justify-center h-screen w-full">
+    <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primaryColor border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"></div>
+    <p className="ml-2">Loading assistance...</p>
+  </div>
+);
+
+// Main component that uses useSearchParams
+const AssistanceContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const topicId = searchParams.get("topic");
@@ -345,6 +354,15 @@ const Assistance = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Wrap the component that uses useSearchParams in Suspense
+const Assistance = () => {
+  return (
+    <Suspense fallback={<AssistanceLoading />}>
+      <AssistanceContent />
+    </Suspense>
   );
 };
 
