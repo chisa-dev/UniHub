@@ -5,18 +5,38 @@ import MainModal from "@/components/modals/MainModal";
 import GradientBackground from "@/components/ui/GradientBackground";
 import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { authService } from "@/app/auth/authService";
 
 export function WithLayoutLayout({ children }: { children: React.ReactNode }) {
   const [showSidebar, setShowSidebar] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    // Check if user is authenticated
+    if (!authService.isAuthenticated()) {
+      // Redirect to login page if not authenticated
+      router.push("/auth/login");
+      return;
+    }
+
     // If the user is at the root of with-layout, redirect to home
     if (pathname === "/dashboard") {
       router.push("/home");
     }
-  }, [pathname, router]);
+  }, [isClient, pathname, router]);
+
+  // Don't render anything during authentication check to prevent flash of content
+  if (isClient && !authService.isAuthenticated()) {
+    return null;
+  }
 
   return (
     <div className="text-n500 relative z-10 h-dvh dark:text-n30">
