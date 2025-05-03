@@ -55,23 +55,39 @@ app.use('/materials', express.static(path.join(__dirname, '../uploads/materials'
 // Database initialization
 const initializeDatabase = async () => {
   try {
+    // Log database connection parameters (redacting password)
+    console.log(`[LOG database] ========= Attempting to connect to database:`);
+    console.log(`[LOG database] ========= Host: ${process.env.DB_HOST}`);
+    console.log(`[LOG database] ========= Database: ${process.env.DB_NAME}`);
+    console.log(`[LOG database] ========= User: ${process.env.DB_USER}`);
+    console.log(`[LOG database] ========= Port: ${process.env.DB_PORT || '3306'}`);
+    
     await sequelize.authenticate();
-    console.log('Database connection has been established successfully.');
+    console.log('[LOG database] ========= Database connection has been established successfully.');
     
     // In development, sync tables without dropping them
     if (process.env.NODE_ENV === 'development') {
-      console.log('Running in development mode - syncing database tables');
+      console.log('[LOG database] ========= Running in development mode - syncing database tables');
       await sequelize.sync();
-      console.log('Database tables synced successfully.');
+      console.log('[LOG database] ========= Database tables synced successfully.');
     }
     
- 
+    return true;
   } catch (error) {
-    console.error('Unable to connect to the database:', error);
+    console.error('[LOG database] ========= Unable to connect to the database:', error);
+    
     // Don't exit process in production as it will crash the serverless function
     if (process.env.NODE_ENV !== 'production') {
+      // Just log in cPanel environment without exiting
+      if (process.env.CPANEL === 'true') {
+        console.error('[LOG database] ========= Running in cPanel environment - continuing despite database error');
+        return false;
+      }
+      console.error('[LOG database] ========= Exiting application due to database connection failure');
       process.exit(1);
     }
+    
+    return false;
   }
 };
 
@@ -196,15 +212,21 @@ const PORT = process.env.PORT || 3000;
 
 // Initialize database in production without server.listen
 if (process.env.NODE_ENV === 'production') {
-  initializeDatabase().catch(err => console.error('Database init error:', err));
+  initializeDatabase()
+    .then(success => {
+      console.log(`[LOG server] ========= Production server started. Database connection: ${success ? 'SUCCESS' : 'FAILED'}`);
+    })
+    .catch(err => console.error('[LOG database] ========= Database init error:', err));
 } 
 // Only start the server if we're not in a test or production environment
 else if (process.env.NODE_ENV !== 'test') {
-  initializeDatabase().then(() => {
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
-    });
+  initializeDatabase().then(success => {
+    if (success || process.env.CPANEL === 'true') {
+      app.listen(PORT, () => {
+        console.log(`[LOG server] ========= Server is running on port ${PORT}`);
+        console.log(`[LOG server] ========= Swagger documentation available at http://localhost:${PORT}/api-docs`);
+      });
+    }
   });
 }
 
