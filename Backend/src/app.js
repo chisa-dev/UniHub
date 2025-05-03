@@ -35,7 +35,14 @@ app.use(cors({
 // Configure helmet but allow Swagger UI resources
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:"]
+      }
+    }
   })
 );
 
@@ -98,16 +105,51 @@ const swaggerOptions = {
 
 const swaggerSpec = swaggerJsdoc(swaggerOptions);
 
+// Set explicit MIME types for swagger files
+app.use((req, res, next) => {
+  if (req.url.endsWith('.js')) {
+    res.setHeader('Content-Type', 'application/javascript');
+  } else if (req.url.endsWith('.css')) {
+    res.setHeader('Content-Type', 'text/css');
+  }
+  next();
+});
+
 // Root route - redirect to Swagger docs
 app.get('/', (req, res) => {
   res.redirect('/api-docs');
 });
 
 // Swagger UI route
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, { 
+app.use('/api-docs', (req, res, next) => {
+  // Add logging for swagger requests
+  console.log(`[LOG swagger_request] ========= Serving Swagger UI: ${req.url}`);
+  next();
+}, swaggerUi.serve, swaggerUi.setup(swaggerSpec, { 
   explorer: true,
   customCss: '.swagger-ui .topbar { display: none }' 
 }));
+
+// Fallback route for Swagger docs in case the UI fails to load
+app.get('/api-docs-simple', (req, res) => {
+  res.send(`
+    <html>
+      <head>
+        <title>UniHub API Documentation</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+        </style>
+      </head>
+      <body>
+        <h1>UniHub API Documentation</h1>
+        <p>Simple fallback documentation page. If you're seeing this, there might be issues with the Swagger UI.</p>
+        <h2>API Specification:</h2>
+        <pre>${JSON.stringify(swaggerSpec, null, 2)}</pre>
+      </body>
+    </html>
+  `);
+});
 
 // API routes
 app.use('/api/status', statusRoutes);
@@ -121,6 +163,18 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/materials', materialRoutes);
 app.use('/api/rag', ragRoutes);
+
+// Specific error handler for API docs
+app.use('/api-docs', (err, req, res, next) => {
+  console.error('[LOG swagger_error] ========= Error serving Swagger UI:', err);
+  console.error('URL:', req.url);
+  console.error('Stack:', err.stack);
+  
+  // Attempt to continue processing
+  if (!res.headersSent) {
+    next(err);
+  }
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
