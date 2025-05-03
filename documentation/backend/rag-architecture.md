@@ -6,7 +6,7 @@ This document provides an in-depth explanation of the Retrieval-Augmented Genera
 
 Retrieval-Augmented Generation (RAG) is an AI framework that enhances large language models (LLMs) by providing them with additional context retrieved from a knowledge base. In UniHub, RAG enables the system to generate educational content (notes and quizzes) based on students' learning materials.
 
-![RAG Architecture Overview](https://mermaid.ink/img/pako:eNqNkk9vozAQxb_KyKdekhZIk6bbA4fdbqW2hw1dt-wBYgO2AiYyJmwU5bvXQKrSdveyJ8vvzfzmj5lAaQVDBmGqZ4s8USuukXMWR1whTKwTXBUL_vUZa17yhQOdEU9oNmcN1yvJq9xR-FWJDV7zoihJXLOkLDZxVYuiPJ5_UrWI80QtWkzCKpEnLRJqPbC5yhOsRJmgUHYhN4ZmubhfbXK9Umt5gJCKnCPWdM2rNdsMQ1YSVQs9oyFiO7eCGdqKOpPZVzn51SbpfipWKGWx9I-eJU5HdB7Z6aLM29mLWDXvyG2JutqYfKnFZntXbLM0f-_UfV_2_fZ-ZkdDFpIwGNPwLsYhHUc_-g2JyKsXzQm5ZROWPDPfo15wZt5QMN-PsQn7Y0fk79YdeVsn-Zt1oO9lv_7bcG9W8x9OJPEhREbGIQ2iOyeivUvQibzIu0j9MBTBD7fGtBvdnAf_eXD4uxcOXUMlHKGznO3rRNLnBdmyFIYGcgQJurZCJmBYIxyZrlvBkIW70_SXuGbxodmBGR4Y5DlMPXxqnGVWRxUzH3CZZxiGo6mJnE-p6fMfvFhz3w?type=png)
+![RAG Architecture Overview](https://gettectonic.com/wp-content/uploads/2024/05/Retrieval-Augmented-Generation-Techniques.webp)
 
 In the diagram above:
 1. User uploads study materials
