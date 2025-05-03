@@ -4,7 +4,8 @@
   "description": "UniHub Backend API with Clean Architecture",
   "main": "src/app.js",
   "scripts": {
-    "start": "node src/app.js",
+    "start": "NODE_ENV=production node src/app.js",
+    "cpanel": "NODE_ENV=production DISABLE_DB_SYNC=true CPANEL=true node index.js",
     "dev": "nodemon src/app.js",
     "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
     "test:watch": "cross-env NODE_ENV=test jest --watch",
