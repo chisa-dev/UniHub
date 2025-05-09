@@ -72,6 +72,7 @@ echo "Sync completed! The client repository is now up-to-date with origin."
 ## 👥 Team Members
 - [Gemechis Elias](https://github.com/chisa-dev)
 - [Fikiresilase](https://github.com/Fikiresilase)
+- [Habteyesus](https://github.com/HabteyesusT )
 
 ## 📜 License
 This project is licensed under the **GPL-3.0 License**.
