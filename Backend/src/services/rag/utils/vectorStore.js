@@ -9,8 +9,12 @@ const { v4: uuidv4 } = require('uuid');
 class QdrantVectorStore {
   constructor() {
     // Initialize Qdrant client with details from environment variables
-    const qdrantUrl = process.env.QDRANT_URL || 'https://f7110744-a463-43c2-8a0e-797ebd51a033.eu-west-1-0.aws.cloud.qdrant.io:6333';
-    const qdrantApiKey = process.env.QDRANT_API_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.9HBhqpEm_urstyoYqROL-5rRbRaQo9_SH4ev3JmkfWo';
+    const qdrantUrl = process.env.QDRANT_URL;
+    const qdrantApiKey = process.env.QDRANT_API_KEY;
+    
+    if (!qdrantUrl || !qdrantApiKey) {
+      console.error('[LOG vector_store] ========= Missing Qdrant configuration. Please set QDRANT_URL and QDRANT_API_KEY in your .env file');
+    }
     
     this.client = new QdrantClient({
       url: qdrantUrl,

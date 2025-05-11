@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# This script synchronizes the main branch from the origin repository to the client repository.
+# It performs a force push which will overwrite any divergent changes in the client repository.
+# Use with caution as this is a destructive operation.
+
 echo "Fetching latest changes..."
 git fetch origin
 git fetch client
