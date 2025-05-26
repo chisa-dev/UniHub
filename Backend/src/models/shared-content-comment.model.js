@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const SharedContentLike = sequelize.define('SharedContentLike', {
+  const SharedContentComment = sequelize.define('SharedContentComment', {
     id: {
       type: DataTypes.CHAR(36),
       defaultValue: DataTypes.UUIDV4,
@@ -23,34 +23,47 @@ module.exports = (sequelize) => {
         key: 'id'
       }
     },
+    comment: {
+      type: DataTypes.TEXT,
+      allowNull: false
+    },
     created_at: {
+      type: DataTypes.DATE,
+      allowNull: false,
+      defaultValue: DataTypes.NOW
+    },
+    updated_at: {
       type: DataTypes.DATE,
       allowNull: false,
       defaultValue: DataTypes.NOW
     }
   }, {
-    tableName: 'shared_content_likes',
-    timestamps: false,
+    tableName: 'shared_content_comments',
+    timestamps: true,
     underscored: true,
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
     indexes: [
       {
-        unique: true,
-        fields: ['shared_content_id', 'user_id']
+        fields: ['shared_content_id']
+      },
+      {
+        fields: ['user_id']
       }
     ]
   });
 
-  SharedContentLike.associate = (models) => {
-    SharedContentLike.belongsTo(models.SharedContent, {
+  SharedContentComment.associate = (models) => {
+    SharedContentComment.belongsTo(models.SharedContent, {
       foreignKey: 'shared_content_id',
       as: 'sharedContent'
     });
     
-    SharedContentLike.belongsTo(models.User, {
+    SharedContentComment.belongsTo(models.User, {
       foreignKey: 'user_id',
-      as: 'user'
+      as: 'author'
     });
   };
 
-  return SharedContentLike;
+  return SharedContentComment;
 }; 

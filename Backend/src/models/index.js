@@ -8,6 +8,9 @@ const TopicProgressModel = require('./topic-progress.model');
 const NoteProgressModel = require('./note-progress.model');
 const QuizProgressModel = require('./quiz-progress.model');
 const MaterialModel = require('./material.model');
+const SharedContentModel = require('./shared-content.model');
+const SharedContentLikeModel = require('./shared-content-like.model');
+const SharedContentCommentModel = require('./shared-content-comment.model');
 
 // Initialize models with sequelize instance
 const Topic = TopicModel(sequelize);
@@ -18,6 +21,9 @@ const TopicProgress = TopicProgressModel(sequelize);
 const NoteProgress = NoteProgressModel(sequelize);
 const QuizProgress = QuizProgressModel(sequelize);
 const Material = MaterialModel(sequelize);
+const SharedContent = SharedContentModel(sequelize);
+const SharedContentLike = SharedContentLikeModel(sequelize);
+const SharedContentComment = SharedContentCommentModel(sequelize);
 
 const models = {
   User,
@@ -28,7 +34,10 @@ const models = {
   TopicProgress,
   NoteProgress,
   QuizProgress,
-  Material
+  Material,
+  SharedContent,
+  SharedContentLike,
+  SharedContentComment
 };
 
 // Initialize associations

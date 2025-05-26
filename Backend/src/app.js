@@ -17,6 +17,7 @@ const statusRoutes = require('./routes/status.routes');
 const statisticsRoutes = require('./routes/statistics.routes');
 const materialRoutes = require('./routes/material.routes');
 const ragRoutes = require('./routes/rag.routes');
+const collaborationRoutes = require('./routes/collaboration.routes');
 
 const app = express();
 
@@ -185,6 +186,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/materials', materialRoutes);
 app.use('/api/rag', ragRoutes);
+app.use('/api/collaboration', collaborationRoutes);
 
 // Specific error handler for API docs
 app.use('/api-docs', (err, req, res, next) => {
