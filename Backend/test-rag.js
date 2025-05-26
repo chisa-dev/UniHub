@@ -24,16 +24,10 @@ console.log('=============================================================\n');
 
 ragTest()
   .then(() => {
-    console.log('\n=============================================================');
-    console.log('RAG service test completed successfully!');
-    console.log('The service is ready to be used in the application.');
-    console.log('=============================================================');
+  
     process.exit(0);
   })
   .catch(err => {
-    console.error('\n=============================================================');
-    console.error('RAG service test failed with error:');
-    console.error(err);
-    console.error('=============================================================');
+
     process.exit(1);
   }); 

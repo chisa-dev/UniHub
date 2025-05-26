@@ -105,7 +105,7 @@ const signup = async (req, res) => {
       user: newUser
     });
   } catch (error) {
-    console.error('[LOG signup ERROR] =========', error);
+    
     res.status(500).json({ message: 'Error creating user', error: error.message });
   }
 };
@@ -154,7 +154,7 @@ const login = async (req, res) => {
       user
     });
   } catch (error) {
-    console.error('[LOG login ERROR] =========', error);
+    // console.error('[LOG login ERROR] =========', error);
     res.status(500).json({ message: 'Error during login', error: error.message });
   }
 };

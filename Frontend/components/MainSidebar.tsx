@@ -21,6 +21,7 @@ import {
   PiTrash,
   PiX,
   PiBookmark,
+  PiUsers,
 } from "react-icons/pi";
 import Link from "next/link";
 import { useMainModal } from "@/stores/modal";
@@ -167,6 +168,11 @@ function MainSidebar({ showSidebar, setShowSidebar }: MainSidebarProps) {
       path: "/notes-materials", 
       name: t('sidebar.notesMaterials'), 
       icon: <PiNote size={20} className="text-primaryColor" /> 
+    },
+    { 
+      path: "/collaboration", 
+      name: "Collaboration", 
+      icon: <PiUsers size={20} className="text-primaryColor" /> 
     },
   ];
 

@@ -7,9 +7,7 @@
     "start": "NODE_ENV=production node src/app.js",
     "cpanel": "NODE_ENV=production DISABLE_DB_SYNC=true CPANEL=true node index.js",
     "dev": "nodemon src/app.js",
-    "test": "cross-env NODE_ENV=test jest --detectOpenHandles",
-    "test:watch": "cross-env NODE_ENV=test jest --watch",
-    "test:coverage": "cross-env NODE_ENV=test jest --coverage",
+    "test": "cross-env NODE_ENV=test jest --detectOpenHandles --forceExit",
     "lint": "eslint .",
     "migrate": "node src/migrations/run_migrations.js",
     "migrate:indexes": "node -e \"require('./src/migrations/run_migrations').runSingleFile('./src/migrations/create_indexes.sql')\""

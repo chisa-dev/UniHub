@@ -44,7 +44,7 @@ module.exports = async (req, res, next) => {
     // Continue to next middleware or route handler
     next();
   } catch (error) {
-    console.error('[LOG auth middleware] ========= Error:', error);
+    // console.error('[LOG auth middleware] ========= Error:', error);
     
     if (error.name === 'JsonWebTokenError') {
       return res.status(401).json({ message: 'Invalid authentication token' });

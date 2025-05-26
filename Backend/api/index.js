@@ -11,7 +11,7 @@ try {
   const fallbackApp = express();
   
   // Log the error details
-  console.error('Error loading main application:', error);
+  // console.error('Error loading main application:', error);
   
   // Basic routes
   fallbackApp.get('/', (req, res) => {
