@@ -4,6 +4,9 @@ export const API_ENDPOINTS = {
   AUTH: {
     SIGNUP: `${API_BASE_URL}/auth/signup`,
     LOGIN: `${API_BASE_URL}/auth/login`,
+    FORGOT_PASSWORD: `${API_BASE_URL}/auth/forgot-password`,
+    RESET_PASSWORD: `${API_BASE_URL}/auth/reset-password`,
+    VALIDATE_RESET_TOKEN: (token: string) => `${API_BASE_URL}/auth/validate-reset-token/${token}`,
   },
   TOPICS: {
     LIST: `${API_BASE_URL}/topics`,
