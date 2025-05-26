@@ -69,26 +69,44 @@ const getSharedContent = async (req, res) => {
     });
 
     // Format response
-    const formattedContent = sharedContent.map(item => ({
-      id: item.id,
-      type: item.content_type,
-      title: item.title,
-      description: item.description,
-      url: item.content_url,
-      tags: item.tags || [],
-      author: {
-        id: item.author.id,
-        name: item.author.full_name || item.author.username,
-        username: item.author.username,
-        avatar: item.author.avatar_url
-      },
-      likes: item.likes_count,
-      comments: item.comments_count,
-      isLiked: item.likes && item.likes.length > 0,
-      timestamp: item.created_at,
-      createdAt: item.created_at,
-      updatedAt: item.updated_at
-    }));
+    const formattedContent = sharedContent.map(item => {
+      // Ensure tags is always an array
+      let parsedTags = [];
+      if (item.tags) {
+        if (Array.isArray(item.tags)) {
+          parsedTags = item.tags;
+        } else if (typeof item.tags === 'string') {
+          try {
+            parsedTags = JSON.parse(item.tags);
+            if (!Array.isArray(parsedTags)) parsedTags = [];
+          } catch (e) {
+            console.warn('[LOG collaboration] ========= Failed to parse tags JSON:', item.tags);
+            parsedTags = [];
+          }
+        }
+      }
+
+      return {
+        id: item.id,
+        type: item.content_type,
+        title: item.title,
+        description: item.description,
+        url: item.content_url,
+        tags: parsedTags,
+        author: {
+          id: item.author.id,
+          name: item.author.full_name || item.author.username,
+          username: item.author.username,
+          avatar: item.author.avatar_url
+        },
+        likes: item.likes_count,
+        comments: item.comments_count,
+        isLiked: item.likes && item.likes.length > 0,
+        timestamp: item.created_at,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at
+      };
+    });
 
     const totalPages = Math.ceil(count / parseInt(limit));
 
@@ -154,13 +172,29 @@ const createSharedContent = async (req, res) => {
       ]
     });
 
+    // Ensure tags is always an array
+    let createdTags = [];
+    if (createdContent.tags) {
+      if (Array.isArray(createdContent.tags)) {
+        createdTags = createdContent.tags;
+      } else if (typeof createdContent.tags === 'string') {
+        try {
+          createdTags = JSON.parse(createdContent.tags);
+          if (!Array.isArray(createdTags)) createdTags = [];
+        } catch (e) {
+          console.warn('[LOG collaboration] ========= Failed to parse tags JSON:', createdContent.tags);
+          createdTags = [];
+        }
+      }
+    }
+
     const formattedContent = {
       id: createdContent.id,
       type: createdContent.content_type,
       title: createdContent.title,
       description: createdContent.description,
       url: createdContent.content_url,
-      tags: createdContent.tags || [],
+      tags: createdTags,
       author: {
         id: createdContent.author.id,
         name: createdContent.author.full_name || createdContent.author.username,

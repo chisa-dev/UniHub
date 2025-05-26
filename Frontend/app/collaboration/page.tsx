@@ -336,7 +336,7 @@ export default function CollaborationPage() {
                     </a>
 
                     {/* Tags */}
-                    {item.tags && item.tags.length > 0 && (
+                    {item.tags && Array.isArray(item.tags) && item.tags.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {item.tags.map((tag, index) => (
                           <span
