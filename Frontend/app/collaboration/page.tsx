@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   PiPlus,
   PiLink,
@@ -12,81 +12,17 @@ import {
   PiClock,
   PiUser,
   PiMagnifyingGlass,
+  PiSpinner,
 } from "react-icons/pi";
-
-// Mock data for shared content
-const mockSharedContent = [
-  {
-    id: "1",
-    type: "topic",
-    title: "Advanced React Patterns and Best Practices",
-    description: "Comprehensive guide covering advanced React patterns including render props, compound components, and custom hooks.",
-    url: "http://localhost:3001/topics/44b416d6-ba07-49ed-b784-2ddc8cc30e15",
-    author: {
-      name: "Sarah Johnson",
-      avatar: "SJ",
-    },
-    timestamp: "2 hours ago",
-    likes: 24,
-    comments: 8,
-    isLiked: false,
-    tags: ["React", "JavaScript", "Frontend"],
-  },
-  {
-    id: "2",
-    type: "quiz",
-    title: "JavaScript ES6+ Features Quiz",
-    description: "Test your knowledge of modern JavaScript features including arrow functions, destructuring, and async/await.",
-    url: "http://localhost:3001/quizzes/quiz-123",
-    author: {
-      name: "Mike Chen",
-      avatar: "MC",
-    },
-    timestamp: "4 hours ago",
-    likes: 18,
-    comments: 12,
-    isLiked: true,
-    tags: ["JavaScript", "ES6", "Quiz"],
-  },
-  {
-    id: "3",
-    type: "topic",
-    title: "Database Design Fundamentals",
-    description: "Learn the principles of good database design, normalization, and relationship modeling.",
-    url: "http://localhost:3001/topics/database-design-101",
-    author: {
-      name: "Alex Rivera",
-      avatar: "AR",
-    },
-    timestamp: "1 day ago",
-    likes: 31,
-    comments: 15,
-    isLiked: false,
-    tags: ["Database", "SQL", "Design"],
-  },
-  {
-    id: "4",
-    type: "quiz",
-    title: "CSS Grid and Flexbox Mastery",
-    description: "Challenge yourself with advanced CSS layout techniques and responsive design patterns.",
-    url: "http://localhost:3001/quizzes/css-layout-quiz",
-    author: {
-      name: "Emma Davis",
-      avatar: "ED",
-    },
-    timestamp: "2 days ago",
-    likes: 27,
-    comments: 6,
-    isLiked: true,
-    tags: ["CSS", "Layout", "Responsive"],
-  },
-];
+import { collaborationService, SharedContent, GetContentParams } from "./collaborationService";
 
 type ContentType = "all" | "topic" | "quiz";
 type SortType = "recent" | "popular" | "comments";
 
 export default function CollaborationPage() {
-  const [sharedContent, setSharedContent] = useState(mockSharedContent);
+  const [sharedContent, setSharedContent] = useState<SharedContent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState<ContentType>("all");
@@ -94,62 +30,118 @@ export default function CollaborationPage() {
   const [shareUrl, setShareUrl] = useState("");
   const [shareTitle, setShareTitle] = useState("");
   const [shareDescription, setShareDescription] = useState("");
+  const [shareTags, setShareTags] = useState("");
+  const [isSharing, setIsSharing] = useState(false);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 0,
+    totalItems: 0,
+    hasNextPage: false,
+    hasPrevPage: false
+  });
 
-  // Filter and sort content
-  const filteredContent = sharedContent
-    .filter((item) => {
-      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-      const matchesType = filterType === "all" || item.type === filterType;
-      return matchesSearch && matchesType;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "popular":
-          return b.likes - a.likes;
-        case "comments":
-          return b.comments - a.comments;
-        case "recent":
-        default:
-          return 0; // Keep original order for recent
+  // Load shared content
+  const loadSharedContent = async (params: GetContentParams = {}) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const requestParams: GetContentParams = {
+        page: 1,
+        limit: 20,
+        sort: sortBy,
+        ...params
+      };
+
+      // Only add type if it's not 'all'
+      if (filterType !== 'all') {
+        requestParams.type = filterType;
       }
-    });
 
-  const handleLike = (id: string) => {
-    setSharedContent(prev => prev.map(item => 
-      item.id === id 
-        ? { ...item, isLiked: !item.isLiked, likes: item.isLiked ? item.likes - 1 : item.likes + 1 }
-        : item
-    ));
+      // Only add search if it has content
+      if (searchQuery.trim()) {
+        requestParams.search = searchQuery.trim();
+      }
+      
+      const response = await collaborationService.getSharedContent(requestParams);
+
+      if (response.success) {
+        setSharedContent(response.data.content);
+        setPagination(response.data.pagination);
+      } else {
+        setError('Failed to load content');
+      }
+    } catch (err) {
+      console.error('[LOG collaboration] ========= Error loading content:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load content');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleShare = () => {
+  // Load content on component mount and when filters change
+  useEffect(() => {
+    loadSharedContent();
+  }, [filterType, sortBy, searchQuery]);
+
+  const handleLike = async (id: string) => {
+    try {
+      const response = await collaborationService.toggleLike(id);
+      
+      if (response.success) {
+        // Update the local state
+        setSharedContent(prev => prev.map(item => 
+          item.id === id 
+            ? { 
+                ...item, 
+                isLiked: response.data.isLiked, 
+                likes: response.data.likesCount 
+              }
+            : item
+        ));
+      }
+    } catch (err) {
+      console.error('[LOG collaboration] ========= Error toggling like:', err);
+      // Optionally show error toast
+    }
+  };
+
+  const handleShare = async () => {
     if (!shareUrl.trim()) return;
     
-    // Create new shared content item
-    const newItem = {
-      id: Date.now().toString(),
-      type: shareUrl.includes("/topics/") ? "topic" as const : "quiz" as const,
-      title: shareTitle || "Shared Content",
-      description: shareDescription || "Check out this amazing content!",
-      url: shareUrl,
-      author: {
-        name: "You",
-        avatar: "YU",
-      },
-      timestamp: "Just now",
-      likes: 0,
-      comments: 0,
-      isLiked: false,
-      tags: [],
-    };
+    try {
+      setIsSharing(true);
+      
+      // Parse tags from comma-separated string
+      const tags = shareTags
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(tag => tag.length > 0);
 
-    setSharedContent(prev => [newItem, ...prev]);
-    setShowShareModal(false);
-    setShareUrl("");
-    setShareTitle("");
-    setShareDescription("");
+      const response = await collaborationService.createSharedContent({
+        content_url: shareUrl,
+        title: shareTitle || undefined,
+        description: shareDescription || undefined,
+        tags: tags.length > 0 ? tags : undefined
+      });
+
+      if (response.success) {
+        // Add the new content to the beginning of the list
+        setSharedContent(prev => [response.data, ...prev]);
+        
+        // Close modal and reset form
+        setShowShareModal(false);
+        setShareUrl("");
+        setShareTitle("");
+        setShareDescription("");
+        setShareTags("");
+      }
+    } catch (err) {
+      console.error('[LOG collaboration] ========= Error sharing content:', err);
+      setError(err instanceof Error ? err.message : 'Failed to share content');
+    } finally {
+      setIsSharing(false);
+    }
   };
 
   const getTypeIcon = (type: string) => {
@@ -161,7 +153,27 @@ export default function CollaborationPage() {
   };
 
   const getTypeColor = (type: string) => {
-    return type === "topic" ? "bg-blue-50 text-blue-700" : "bg-green-50 text-green-700";
+    return type === "topic" ? "bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400" : "bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400";
+  };
+
+  const formatTimestamp = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    
+    if (diffInHours < 1) return 'Just now';
+    if (diffInHours < 24) return `${diffInHours} hour${diffInHours > 1 ? 's' : ''} ago`;
+    if (diffInHours < 48) return 'Yesterday';
+    return `${Math.floor(diffInHours / 24)} day${Math.floor(diffInHours / 24) > 1 ? 's' : ''} ago`;
+  };
+
+  const getAuthorInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(word => word.charAt(0))
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   return (
@@ -176,6 +188,22 @@ export default function CollaborationPage() {
             Share and discover amazing topics and quizzes with the community
           </p>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                loadSharedContent();
+              }}
+              className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        )}
 
         {/* Action Bar */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
@@ -228,109 +256,129 @@ export default function CollaborationPage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex items-center justify-center py-12">
+            <PiSpinner className="animate-spin text-blue-600" size={32} />
+            <span className="ml-2 text-gray-600 dark:text-gray-400">Loading content...</span>
+          </div>
+        )}
+
         {/* Content Feed */}
-        <div className="space-y-4">
-          {filteredContent.length === 0 ? (
-            <div className="text-center py-12">
-              <PiChatCircle size={48} className="mx-auto text-gray-400 mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                No content found
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                {searchQuery ? "Try adjusting your search terms" : "Be the first to share something!"}
-              </p>
-            </div>
-          ) : (
-            filteredContent.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-200"
-              >
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
-                      {item.author.avatar}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white">
-                        {item.author.name}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                        <PiClock size={14} />
-                        {item.timestamp}
+        {!loading && (
+          <div className="space-y-4">
+            {sharedContent.length === 0 ? (
+              <div className="text-center py-12">
+                <PiChatCircle size={48} className="mx-auto text-gray-400 mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  No content found
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {searchQuery ? "Try adjusting your search terms" : "Be the first to share something!"}
+                </p>
+              </div>
+            ) : (
+              sharedContent.map((item) => (
+                <div
+                  key={item.id}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow duration-200"
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-medium">
+                        {item.author.avatar ? (
+                          <img 
+                            src={item.author.avatar} 
+                            alt={item.author.name}
+                            className="w-full h-full rounded-full object-cover"
+                          />
+                        ) : (
+                          getAuthorInitials(item.author.name)
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {item.author.name}
+                        </p>
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                          <PiClock size={14} />
+                          {formatTimestamp(item.timestamp)}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type)}`}>
-                    {getTypeIcon(item.type)}
-                    {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                    {item.title}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-3">
-                    {item.description}
-                  </p>
-                  
-                  {/* URL Link */}
-                  <a
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200"
-                  >
-                    <PiLink size={16} />
-                    View Content
-                  </a>
-
-                  {/* Tags */}
-                  {item.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3">
-                      {item.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${getTypeColor(item.type)}`}>
+                      {getTypeIcon(item.type)}
+                      {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <button
-                    onClick={() => handleLike(item.id)}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors duration-200 ${
-                      item.isLiked
-                        ? "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
-                        : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
-                    }`}
-                  >
-                    {item.isLiked ? <PiHeartFill size={16} /> : <PiHeart size={16} />}
-                    {item.likes}
-                  </button>
-                  
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors duration-200">
-                    <PiChatCircle size={16} />
-                    {item.comments}
-                  </button>
-                  
-                  <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors duration-200">
-                    <PiShare size={16} />
-                    Share
-                  </button>
+                  {/* Content */}
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                      {item.title}
+                    </h3>
+                    {item.description && (
+                      <p className="text-gray-600 dark:text-gray-400 mb-3">
+                        {item.description}
+                      </p>
+                    )}
+                    
+                    {/* URL Link */}
+                    <a
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-lg text-sm text-gray-700 dark:text-gray-300 transition-colors duration-200"
+                    >
+                      <PiLink size={16} />
+                      View Content
+                    </a>
+
+                    {/* Tags */}
+                    {item.tags && item.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {item.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs rounded-full"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => handleLike(item.id)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors duration-200 ${
+                        item.isLiked
+                          ? "bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400"
+                          : "hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+                      }`}
+                    >
+                      {item.isLiked ? <PiHeartFill size={16} /> : <PiHeart size={16} />}
+                      {item.likes}
+                    </button>
+                    
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors duration-200">
+                      <PiChatCircle size={16} />
+                      {item.comments}
+                    </button>
+                    
+                    <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400 transition-colors duration-200">
+                      <PiShare size={16} />
+                      Share
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
       </div>
 
       {/* Share Modal */}
@@ -380,21 +428,36 @@ export default function CollaborationPage() {
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Tags (optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="React, JavaScript, Frontend (comma separated)"
+                  value={shareTags}
+                  onChange={(e) => setShareTags(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
             
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowShareModal(false)}
-                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+                disabled={isSharing}
+                className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleShare}
-                disabled={!shareUrl.trim()}
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 disabled:cursor-not-allowed"
+                disabled={!shareUrl.trim() || isSharing}
+                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Share
+                {isSharing && <PiSpinner className="animate-spin" size={16} />}
+                {isSharing ? 'Sharing...' : 'Share'}
               </button>
             </div>
           </div>
@@ -402,4 +465,4 @@ export default function CollaborationPage() {
       )}
     </div>
   );
-} 
+}

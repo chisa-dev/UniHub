@@ -50,6 +50,14 @@ export const API_ENDPOINTS = {
     UPDATE_EVENT: (id: string) => `${API_BASE_URL}/calendar/events/${id}`,
     DELETE_EVENT: (id: string) => `${API_BASE_URL}/calendar/events/${id}`,
   },
+  COLLABORATION: {
+    LIST_CONTENT: `${API_BASE_URL}/collaboration/content`,
+    CREATE_CONTENT: `${API_BASE_URL}/collaboration/content`,
+    DELETE_CONTENT: (id: string) => `${API_BASE_URL}/collaboration/content/${id}`,
+    TOGGLE_LIKE: (id: string) => `${API_BASE_URL}/collaboration/content/${id}/like`,
+    GET_COMMENTS: (id: string) => `${API_BASE_URL}/collaboration/content/${id}/comments`,
+    ADD_COMMENT: (id: string) => `${API_BASE_URL}/collaboration/content/${id}/comments`,
+  },
   // Add more endpoints as needed
 };
 
