@@ -181,7 +181,21 @@ router.post(
   '/content',
   [
     auth,
-    body('content_url').isURL().withMessage('Valid URL is required'),
+    body('content_url')
+      .trim()
+      .notEmpty()
+      .withMessage('Content URL is required')
+      .custom((value) => {
+        // Allow full URLs, relative URLs, or paths
+        if (value.startsWith('http://') || value.startsWith('https://') || value.startsWith('/')) {
+          return true;
+        }
+        // Also allow localhost URLs without protocol
+        if (value.includes('localhost') || value.includes('127.0.0.1')) {
+          return true;
+        }
+        throw new Error('Invalid URL format');
+      }),
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('description').optional().trim(),
     body('tags').optional().isArray().withMessage('Tags must be an array'),
