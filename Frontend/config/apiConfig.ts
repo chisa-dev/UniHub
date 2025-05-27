@@ -70,12 +70,18 @@ export const API_ENDPOINTS = {
   
   COLLABORATION: {
     SHARED_CONTENT: `${API_BASE_URL}/collaboration/shared-content`,
+    LIST_CONTENT: `${API_BASE_URL}/collaboration/shared-content`,
+    CREATE_CONTENT: `${API_BASE_URL}/collaboration/shared-content`,
     CREATE_SHARED_CONTENT: `${API_BASE_URL}/collaboration/shared-content`,
     GET_SHARED_CONTENT: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}`,
     UPDATE_SHARED_CONTENT: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}`,
     DELETE_SHARED_CONTENT: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}`,
+    DELETE_CONTENT: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}`,
     LIKE_CONTENT: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}/like`,
+    TOGGLE_LIKE: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}/like`,
     COMMENT_CONTENT: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}/comments`,
+    GET_COMMENTS: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}/comments`,
+    ADD_COMMENT: (id: string) => `${API_BASE_URL}/collaboration/shared-content/${id}/comments`,
   },
   // Add more endpoints as needed
 };
