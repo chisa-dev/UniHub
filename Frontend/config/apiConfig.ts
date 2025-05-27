@@ -63,6 +63,7 @@ export const API_ENDPOINTS = {
   
   CALENDAR: {
     EVENTS: `${API_BASE_URL}/calendar/events`,
+    GET_EVENTS: `${API_BASE_URL}/calendar/events`,
     CREATE_EVENT: `${API_BASE_URL}/calendar/events`,
     UPDATE_EVENT: (id: string) => `${API_BASE_URL}/calendar/events/${id}`,
     DELETE_EVENT: (id: string) => `${API_BASE_URL}/calendar/events/${id}`,
