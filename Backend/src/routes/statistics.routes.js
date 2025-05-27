@@ -21,6 +21,51 @@ router.get('/', auth, statisticsController.getUserStatistics);
 
 /**
  * @swagger
+ * /statistics/quiz-performance:
+ *   get:
+ *     summary: Get quiz performance statistics
+ *     description: Retrieves detailed quiz performance statistics for the authenticated user
+ *     tags: [Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Quiz performance statistics retrieved successfully
+ */
+router.get('/quiz-performance', auth, statisticsController.getQuizPerformance);
+
+/**
+ * @swagger
+ * /statistics/note-progress:
+ *   get:
+ *     summary: Get note reading progress
+ *     description: Retrieves note reading progress for the authenticated user
+ *     tags: [Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Note progress retrieved successfully
+ */
+router.get('/note-progress', auth, statisticsController.getNoteProgress);
+
+/**
+ * @swagger
+ * /statistics/study-sessions:
+ *   get:
+ *     summary: Get study sessions
+ *     description: Retrieves study session history for the authenticated user
+ *     tags: [Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Study sessions retrieved successfully
+ */
+router.get('/study-sessions', auth, statisticsController.getStudySessions);
+
+/**
+ * @swagger
  * /statistics/topics:
  *   put:
  *     summary: Update topic progress

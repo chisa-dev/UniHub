@@ -25,25 +25,25 @@ export default function ThemeSwitch() {
     );
   }
 
-  if (resolvedTheme === "dark") {
-    return (
-      <button
-        className="bg-n0 p-2 rounded-full flex justify-center items-center border border-primaryColor/20"
-        onClick={() => setTheme("light")}
-      >
-        <FiSun />
-      </button>
-    );
-  }
+  // if (resolvedTheme === "dark") {
+  //   return (
+  //     <button
+  //       className="bg-n0 p-2 rounded-full flex justify-center items-center border border-primaryColor/20"
+  //       onClick={() => setTheme("light")}
+  //     >
+  //       <FiSun />
+  //     </button>
+  //   );
+  // }
 
-  if (resolvedTheme === "light") {
-    return (
-      <button
-        className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 "
-        onClick={() => setTheme("dark")}
-      >
-        <FiMoon />
-      </button>
-    );
-  }
+  // if (resolvedTheme === "light") {
+  //   return (
+  //     <button
+  //       className="bg-white p-2 rounded-full flex justify-center items-center border border-primaryColor/20 "
+  //       onClick={() => setTheme("dark")}
+  //     >
+  //       <FiMoon />
+  //     </button>
+  //   );
+  // }
 }

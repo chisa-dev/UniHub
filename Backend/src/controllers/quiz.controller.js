@@ -425,6 +425,52 @@ const submitQuizAttempt = async (req, res) => {
       }
     }
 
+    // Update quiz progress statistics
+    try {
+      const { QuizProgress } = require('../models');
+      
+      // Find or create quiz progress
+      let quizProgress = await QuizProgress.findOne({
+        where: {
+          user_id: req.user.id,
+          quiz_id: quizId
+        }
+      });
+      
+      if (quizProgress) {
+        // Update existing record
+        quizProgress.attempts_count += 1;
+        quizProgress.last_attempt_date = new Date();
+        
+        // Update best score if the new score is higher
+        if (quizProgress.best_score === null || scorePercentage > quizProgress.best_score) {
+          quizProgress.best_score = scorePercentage;
+        }
+        
+        // Update progress (consider quiz completed if score >= 70%)
+        const newProgress = scorePercentage >= 70 ? 100 : Math.max(quizProgress.progress, scorePercentage);
+        quizProgress.progress = newProgress;
+        
+        await quizProgress.save();
+        console.log('[LOG quiz] ========= Updated quiz progress for user:', req.user.id, 'quiz:', quizId);
+      } else {
+        // Create new record
+        const progress = scorePercentage >= 70 ? 100 : scorePercentage;
+        quizProgress = await QuizProgress.create({
+          user_id: req.user.id,
+          quiz_id: quizId,
+          progress,
+          best_score: scorePercentage,
+          attempts_count: 1,
+          last_attempt_date: new Date()
+        });
+        console.log('[LOG quiz] ========= Created new quiz progress for user:', req.user.id, 'quiz:', quizId);
+      }
+    } catch (progressError) {
+      console.error('[LOG quiz] ========= Error updating quiz progress:', progressError);
+      // Don't fail the main request if progress update fails
+    }
+
     res.json({
       message: 'Quiz attempt submitted successfully',
       attemptId,

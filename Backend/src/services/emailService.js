@@ -32,9 +32,9 @@ class EmailService {
         });
       }
 
-      console.log('[LOG email_service] ========= Email transporter initialized');
+      // console.log('[LOG email_service] ========= Email transporter initialized');
     } catch (error) {
-      console.error('[LOG email_service] ========= Failed to initialize email transporter:', error);
+      // console.error('[LOG email_service] ========= Failed to initialize email transporter:', error);
     }
   }
 
@@ -124,8 +124,8 @@ class EmailService {
 
       const info = await this.transporter.sendMail(mailOptions);
       
-      console.log('[LOG email_service] ========= Password reset email sent successfully');
-      console.log('[LOG email_service] ========= Message ID:', info.messageId);
+      // console.log('[LOG email_service] ========= Password reset email sent successfully');
+      // console.log('[LOG email_service] ========= Message ID:', info.messageId);
       
       // Log preview URL for development
       if (process.env.NODE_ENV !== 'production') {
@@ -139,7 +139,7 @@ class EmailService {
       };
       
     } catch (error) {
-      console.error('[LOG email_service] ========= Failed to send password reset email:', error);
+      // console.error('[LOG email_service] ========= Failed to send password reset email:', error);
       throw new Error('Failed to send password reset email');
     }
   }
@@ -220,8 +220,8 @@ class EmailService {
 
       const info = await this.transporter.sendMail(mailOptions);
       
-      console.log('[LOG email_service] ========= Password change confirmation email sent successfully');
-      console.log('[LOG email_service] ========= Message ID:', info.messageId);
+      // console.log('[LOG email_service] ========= Password change confirmation email sent successfully');
+      // console.log('[LOG email_service] ========= Message ID:', info.messageId);
       
       return {
         success: true,
@@ -229,7 +229,7 @@ class EmailService {
       };
       
     } catch (error) {
-      console.error('[LOG email_service] ========= Failed to send password change confirmation email:', error);
+      // console.error('[LOG email_service] ========= Failed to send password change confirmation email:', error);
       throw new Error('Failed to send password change confirmation email');
     }
   }

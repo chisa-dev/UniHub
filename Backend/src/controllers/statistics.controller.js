@@ -55,18 +55,12 @@ const getUserStatistics = async (req, res) => {
       type: sequelize.QueryTypes.SELECT
     });
     
-    // Get study hours for the last 7 days
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
+    // Get all study hours (all-time statistics)
     const studySessions = await StudySession.findAll({
       where: {
-        user_id: userId,
-        study_date: {
-          [Op.gte]: oneWeekAgo
-        }
+        user_id: userId
       },
-      order: [['study_date', 'ASC']]
+      order: [['study_date', 'DESC']]
     });
     
     // Get aggregate statistics
@@ -157,6 +151,212 @@ const getUserStatistics = async (req, res) => {
     });
     res.status(500).json({
       message: 'Error fetching user statistics',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get quiz performance statistics only
+ */
+const getQuizPerformance = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    console.log('[LOG statistics] ========= Fetching quiz performance for user:', userId);
+    
+    // Get quiz progress statistics
+    const quizProgress = await QuizProgress.findAll({
+      where: { user_id: userId },
+      include: [
+        {
+          model: Quiz,
+          as: 'quiz',
+          attributes: ['title']
+        }
+      ],
+      order: [['updated_at', 'DESC']]
+    });
+    
+    // Get quiz aggregate statistics
+    const [aggregateStats] = await sequelize.query(`
+      SELECT 
+        COUNT(DISTINCT qp.quiz_id) as total_quizzes_attempted,
+        COALESCE(AVG(qp.progress), 0) as avg_quiz_progress,
+        COALESCE(AVG(qp.best_score), 0) as avg_quiz_score,
+        COALESCE(MAX(qp.best_score), 0) as highest_score,
+        COALESCE(MIN(qp.best_score), 0) as lowest_score
+      FROM quiz_progress qp
+      WHERE qp.user_id = ?
+    `, {
+      replacements: [userId],
+      type: sequelize.QueryTypes.SELECT
+    });
+    
+    const formattedQuizProgress = quizProgress.map(qp => ({
+      quizId: qp.quiz_id,
+      quizTitle: qp.quiz?.title || 'Unknown Quiz',
+      progress: qp.progress,
+      bestScore: qp.best_score,
+      attemptsCount: qp.attempts_count,
+      updatedAt: qp.updated_at
+    }));
+    
+    res.json({
+      quiz_progress: formattedQuizProgress,
+      summary: {
+        total_quizzes_attempted: aggregateStats.total_quizzes_attempted || 0,
+        avg_quiz_progress: parseFloat(aggregateStats.avg_quiz_progress || 0).toFixed(2),
+        avg_quiz_score: parseFloat(aggregateStats.avg_quiz_score || 0).toFixed(2),
+        highest_score: aggregateStats.highest_score || 0,
+        lowest_score: aggregateStats.lowest_score || 0
+      }
+    });
+  } catch (error) {
+    console.error('[LOG statistics] ========= Error fetching quiz performance:', error);
+    res.status(500).json({
+      message: 'Error fetching quiz performance',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get note progress statistics only
+ */
+const getNoteProgress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    console.log('[LOG statistics] ========= Fetching note progress for user:', userId);
+    
+    // Get note progress statistics
+    const noteProgress = await sequelize.query(`
+      SELECT np.*, n.title
+      FROM note_progress np
+      JOIN notes n ON np.note_id = n.id
+      WHERE np.user_id = ?
+      ORDER BY np.updated_at DESC
+    `, {
+      replacements: [userId],
+      type: sequelize.QueryTypes.SELECT
+    });
+    
+    // Get note aggregate statistics
+    const [aggregateStats] = await sequelize.query(`
+      SELECT 
+        COUNT(DISTINCT np.note_id) as total_notes_read,
+        COALESCE(AVG(np.progress), 0) as avg_note_progress
+      FROM note_progress np
+      WHERE np.user_id = ?
+    `, {
+      replacements: [userId],
+      type: sequelize.QueryTypes.SELECT
+    });
+    
+    const formattedNoteProgress = noteProgress && Array.isArray(noteProgress) ? 
+      noteProgress.map(np => ({
+        noteId: np.note_id,
+        noteTitle: np.title || 'Unknown Note',
+        progress: np.progress,
+        updatedAt: np.updated_at
+      })) : [];
+    
+    res.json({
+      note_progress: formattedNoteProgress,
+      summary: {
+        total_notes_read: aggregateStats.total_notes_read || 0,
+        avg_note_progress: parseFloat(aggregateStats.avg_note_progress || 0).toFixed(2)
+      }
+    });
+  } catch (error) {
+    console.error('[LOG statistics] ========= Error fetching note progress:', error);
+    res.status(500).json({
+      message: 'Error fetching note progress',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get study sessions only
+ */
+const getStudySessions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { days } = req.query; // Optional days filter
+    
+    console.log('[LOG statistics] ========= Fetching study sessions for user:', userId);
+    
+    let whereClause = { user_id: userId };
+    
+    // Only apply date filter if days parameter is provided
+    if (days && parseInt(days) > 0) {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - parseInt(days));
+      whereClause.study_date = { [Op.gte]: startDate };
+    }
+    
+    const studySessions = await StudySession.findAll({
+      where: whereClause,
+      order: [['study_date', 'DESC']]
+    });
+    
+    // Get study session aggregate statistics
+    let aggregateQuery = `
+      SELECT 
+        COALESCE(SUM(ss.hours), 0) as total_study_hours,
+        COALESCE(AVG(ss.hours), 0) as avg_daily_hours,
+        COALESCE(AVG(ss.productivity_score), 0) as avg_productivity_score,
+        COUNT(*) as total_sessions
+      FROM study_sessions ss
+      WHERE ss.user_id = ?
+    `;
+    
+    let replacements = [userId];
+    
+    // Add date filter if days parameter is provided
+    if (days && parseInt(days) > 0) {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - parseInt(days));
+      aggregateQuery += ` AND ss.study_date >= ?`;
+      replacements.push(startDate);
+    }
+    
+    const [aggregateStats] = await sequelize.query(aggregateQuery, {
+      replacements,
+      type: sequelize.QueryTypes.SELECT
+    });
+    
+    const formattedStudySessions = studySessions.map(ss => {
+      // Calculate productivity change (simplified)
+      const productivityChange = ss.productivity_score ? 
+        (ss.productivity_score - (ss.previousDayScore || ss.productivity_score)) : 
+        0;
+      
+      return {
+        date: ss.study_date,
+        hours: ss.hours,
+        productivityScore: ss.productivity_score || 0,
+        productivityChange,
+        notes: ss.notes,
+        updatedAt: ss.updated_at
+      };
+    });
+    
+    res.json({
+      study_hours: formattedStudySessions,
+      summary: {
+        total_study_hours: aggregateStats.total_study_hours || 0,
+        avg_daily_hours: parseFloat(aggregateStats.avg_daily_hours || 0).toFixed(2),
+        avg_productivity_score: parseFloat(aggregateStats.avg_productivity_score || 0).toFixed(2),
+        total_sessions: aggregateStats.total_sessions || 0
+      }
+    });
+  } catch (error) {
+    console.error('[LOG statistics] ========= Error fetching study sessions:', error);
+    res.status(500).json({
+      message: 'Error fetching study sessions',
       error: error.message
     });
   }
@@ -461,6 +661,9 @@ const logStudySession = async (req, res) => {
 
 module.exports = {
   getUserStatistics,
+  getQuizPerformance,
+  getNoteProgress,
+  getStudySessions,
   updateTopicProgress,
   updateQuizProgress,
   updateNoteProgress,

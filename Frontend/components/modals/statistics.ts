@@ -3,24 +3,31 @@ export interface TopicProgress {
   topicTitle: string;
   progress: number;
   materialsCount: number;
+  updatedAt: string;
 }
 
 export interface QuizProgress {
   quizId: string;
   quizTitle: string;
   progress: number;
-  score: number;
+  bestScore: number;
+  attemptsCount: number;
+  updatedAt: string;
 }
 
 export interface NoteProgress {
   noteId: string;
   noteTitle: string;
   progress: number;
+  updatedAt: string;
 }
 
 export interface StudyHours {
   date: string;
   hours: number;
+  productivityScore: number;
+  productivityChange: number;
+  updatedAt: string;
 }
 
 export interface StatisticsSummary {

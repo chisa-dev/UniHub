@@ -327,6 +327,14 @@ class QuizzesService {
       }
 
       const data = await response.json();
+      
+      // The backend now automatically updates quiz progress, so we just log success
+      console.log('[LOG quiz_service] ========= Quiz attempt submitted and progress updated:', {
+        quizId,
+        score: data.score,
+        attemptId: data.attemptId
+      });
+      
       return data;
     } catch (error) {
       console.error('[LOG error] ========= Error submitting quiz attempt:', error instanceof Error ? error.message : String(error));
